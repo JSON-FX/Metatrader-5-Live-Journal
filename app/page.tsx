@@ -18,6 +18,7 @@ import { useLiveData } from './hooks/useLiveData';
 import LiveAccountPanel from './components/LiveAccountPanel';
 import OpenPositionsPanel from './components/OpenPositionsPanel';
 import LiveTradesTable from './components/LiveTradesTable';
+import LiveEquityChart from './components/LiveEquityChart';
 
 export default function Home() {
   const [reports, setReports] = useState<MT5Report[]>([]);
@@ -214,6 +215,12 @@ export default function Home() {
         />
         {liveData.positions.length > 0 && (
           <OpenPositionsPanel positions={liveData.positions} />
+        )}
+        {liveData.status === 'online' && liveData.account && (
+          <LiveEquityChart
+            trades={liveData.history}
+            balance={liveData.account.balance}
+          />
         )}
         {liveData.status === 'online' && (
           <LiveTradesTable
