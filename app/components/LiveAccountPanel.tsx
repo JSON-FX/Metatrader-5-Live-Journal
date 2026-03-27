@@ -1,12 +1,14 @@
 'use client';
 
-import { Wifi, WifiOff, Loader2, DollarSign, TrendingUp, TrendingDown, AlertTriangle } from 'lucide-react';
-import { LiveAccountInfo, LiveStatus } from '../lib/live-types';
+import { useMemo } from 'react';
+import { Wifi, WifiOff, Loader2, DollarSign, TrendingUp, TrendingDown, AlertTriangle, Landmark } from 'lucide-react';
+import { LiveAccountInfo, LiveStatus, LiveTrade } from '../lib/live-types';
 
 interface LiveAccountPanelProps {
   status: LiveStatus;
   account: LiveAccountInfo | null;
   lastUpdated: Date | null;
+  trades: LiveTrade[];
 }
 
 function formatCurrency(value: number, currency = 'USD'): string {
@@ -72,10 +74,16 @@ function StatCard({
   );
 }
 
-export default function LiveAccountPanel({ status, account, lastUpdated }: LiveAccountPanelProps) {
+export default function LiveAccountPanel({ status, account, lastUpdated, trades }: LiveAccountPanelProps) {
   const currency = account?.currency ?? 'USD';
   const floatingColor = account && account.floating_pnl >= 0 ? 'text-emerald-400' : 'text-red-400';
   const ddColor = account && account.drawdown_pct > 3 ? 'text-orange-400' : 'text-zinc-300';
+
+  const startingCapital = useMemo(() => {
+    if (!account) return null;
+    const totalPnl = trades.reduce((sum, t) => sum + t.profit + t.commission + t.swap, 0);
+    return account.balance - totalPnl;
+  }, [account, trades]);
 
   return (
     <div className="bg-zinc-900 rounded-xl border border-zinc-800 p-6">
@@ -107,7 +115,14 @@ export default function LiveAccountPanel({ status, account, lastUpdated }: LiveA
       )}
 
       {account && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+          {startingCapital != null && (
+            <StatCard
+              label="Starting Capital"
+              value={formatCurrency(startingCapital, currency)}
+              icon={<Landmark className="w-4 h-4 text-zinc-400" />}
+            />
+          )}
           <StatCard
             label="Balance"
             value={formatCurrency(account.balance, currency)}

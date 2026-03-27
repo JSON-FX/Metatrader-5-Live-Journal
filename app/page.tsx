@@ -212,6 +212,7 @@ export default function Home() {
           status={liveData.status}
           account={liveData.account}
           lastUpdated={liveData.lastUpdated}
+          trades={liveData.history}
         />
         {liveData.positions.length > 0 && (
           <OpenPositionsPanel positions={liveData.positions} />
