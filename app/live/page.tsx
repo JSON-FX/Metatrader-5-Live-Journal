@@ -20,7 +20,7 @@ export default function LivePage() {
         trades={liveData.history}
       />
 
-      {liveData.positions.length > 0 && (
+      {liveData.status === 'online' && (
         <OpenPositionsTable positions={liveData.positions} />
       )}
 
