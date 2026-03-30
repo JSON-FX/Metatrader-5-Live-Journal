@@ -1,0 +1,169 @@
+<h2>Landing Page Style</h2>
+<p class="subtitle">How should the home screen feel when you open the app?</p>
+
+<div class="cards">
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%); padding: 24px; min-height: 280px; display: flex; flex-direction: column;">
+      <!-- Header -->
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M3 3v18h18"/><path d="M18 9l-5-6-4 7-4-3"/></svg>
+          <span style="color: #f1f5f9; font-size: 14px; font-weight: 600; letter-spacing: -0.3px;">MT5 Journal</span>
+        </div>
+        <div style="display: flex; gap: 6px; align-items: center;">
+          <div style="width: 6px; height: 6px; border-radius: 50%; background: #22c55e;"></div>
+          <span style="color: #64748b; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Online</span>
+        </div>
+      </div>
+      <!-- Two cards -->
+      <div style="display: flex; gap: 12px; flex: 1;">
+        <div style="flex: 1; background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 20px; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer;">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="1.5" style="margin-bottom: 10px;"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          <div style="color: #f1f5f9; font-size: 14px; font-weight: 600;">Live Trading</div>
+          <div style="color: #64748b; font-size: 11px; margin-top: 4px;">Monitor your account</div>
+        </div>
+        <div style="flex: 1; background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 20px; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer;">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="1.5" style="margin-bottom: 10px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>
+          <div style="color: #f1f5f9; font-size: 14px; font-weight: 600;">Backtests</div>
+          <div style="color: #64748b; font-size: 11px; margin-top: 4px;">Import & analyze reports</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A. Minimal & Functional</h3>
+      <p>Clean, no fluff. Two cards, one click to get where you're going. All business.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%); padding: 24px; min-height: 280px; display: flex; flex-direction: column;">
+      <!-- Header -->
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M3 3v18h18"/><path d="M18 9l-5-6-4 7-4-3"/></svg>
+          <span style="color: #f1f5f9; font-size: 14px; font-weight: 600; letter-spacing: -0.3px;">MT5 Journal</span>
+        </div>
+        <div style="display: flex; gap: 6px; align-items: center;">
+          <div style="width: 6px; height: 6px; border-radius: 50%; background: #22c55e;"></div>
+          <span style="color: #64748b; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Online</span>
+        </div>
+      </div>
+      <!-- Two cards with data -->
+      <div style="display: flex; gap: 12px; flex: 1;">
+        <div style="flex: 1; background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; cursor: pointer;">
+          <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 12px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            <span style="color: #f1f5f9; font-size: 13px; font-weight: 600;">Live Trading</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+            <span style="color: #64748b; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Balance</span>
+            <span style="color: #f1f5f9; font-size: 12px; font-family: monospace;">$12,450</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+            <span style="color: #64748b; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Equity</span>
+            <span style="color: #22c55e; font-size: 12px; font-family: monospace;">$12,580</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+            <span style="color: #64748b; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Positions</span>
+            <span style="color: #f1f5f9; font-size: 12px; font-family: monospace;">3 open</span>
+          </div>
+          <svg viewBox="0 0 200 30" style="width: 100%; height: 30px; margin-top: auto;">
+            <defs><linearGradient id="lgB" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#3b82f6" stop-opacity="0.2"/><stop offset="100%" stop-color="#3b82f6" stop-opacity="0"/></linearGradient></defs>
+            <path d="M0,25 L25,23 L50,20 L75,22 L100,18 L125,15 L150,12 L175,8 L200,5" fill="none" stroke="#3b82f6" stroke-width="1.5"/>
+            <path d="M0,25 L25,23 L50,20 L75,22 L100,18 L125,15 L150,12 L175,8 L200,5 L200,30 L0,30Z" fill="url(#lgB)"/>
+          </svg>
+        </div>
+        <div style="flex: 1; background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; cursor: pointer;">
+          <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 12px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+            <span style="color: #f1f5f9; font-size: 13px; font-weight: 600;">Backtests</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+            <span style="color: #64748b; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Reports</span>
+            <span style="color: #f1f5f9; font-size: 12px; font-family: monospace;">12</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+            <span style="color: #64748b; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Last Import</span>
+            <span style="color: #f1f5f9; font-size: 12px; font-family: monospace;">2d ago</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+            <span style="color: #64748b; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Best Profit</span>
+            <span style="color: #22c55e; font-size: 12px; font-family: monospace;">+$3,240</span>
+          </div>
+          <div style="display: flex; gap: 4px; margin-top: auto; align-items: flex-end; height: 30px;">
+            <div style="flex:1; background: #22c55e; opacity: 0.6; height: 40%; border-radius: 2px;"></div>
+            <div style="flex:1; background: #ef4444; opacity: 0.6; height: 20%; border-radius: 2px;"></div>
+            <div style="flex:1; background: #22c55e; opacity: 0.6; height: 60%; border-radius: 2px;"></div>
+            <div style="flex:1; background: #22c55e; opacity: 0.6; height: 80%; border-radius: 2px;"></div>
+            <div style="flex:1; background: #ef4444; opacity: 0.6; height: 30%; border-radius: 2px;"></div>
+            <div style="flex:1; background: #22c55e; opacity: 0.6; height: 100%; border-radius: 2px;"></div>
+            <div style="flex:1; background: #22c55e; opacity: 0.6; height: 55%; border-radius: 2px;"></div>
+            <div style="flex:1; background: #ef4444; opacity: 0.6; height: 15%; border-radius: 2px;"></div>
+            <div style="flex:1; background: #22c55e; opacity: 0.6; height: 70%; border-radius: 2px;"></div>
+            <div style="flex:1; background: #22c55e; opacity: 0.6; height: 90%; border-radius: 2px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B. Status-Aware Dashboard</h3>
+      <p>Each card shows live summary data at a glance -- balance, positions count, report stats, mini sparklines. Enough context to decide where to go.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%); padding: 24px; min-height: 280px; display: flex; flex-direction: column;">
+      <!-- Header -->
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M3 3v18h18"/><path d="M18 9l-5-6-4 7-4-3"/></svg>
+          <span style="color: #f1f5f9; font-size: 14px; font-weight: 600; letter-spacing: -0.3px;">MT5 Journal</span>
+        </div>
+        <div style="display: flex; gap: 6px; align-items: center;">
+          <div style="width: 6px; height: 6px; border-radius: 50%; background: #22c55e;"></div>
+          <span style="color: #64748b; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Online</span>
+        </div>
+      </div>
+      <!-- Quick stats row -->
+      <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+        <div style="flex:1; background: #1e293b; border: 1px solid #334155; border-radius: 6px; padding: 8px 10px;">
+          <div style="color: #64748b; font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px;">Balance</div>
+          <div style="color: #f1f5f9; font-size: 13px; font-family: monospace; font-weight: 600;">$12,450</div>
+        </div>
+        <div style="flex:1; background: #1e293b; border: 1px solid #334155; border-radius: 6px; padding: 8px 10px;">
+          <div style="color: #64748b; font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px;">Floating</div>
+          <div style="color: #22c55e; font-size: 13px; font-family: monospace; font-weight: 600;">+$130</div>
+        </div>
+        <div style="flex:1; background: #1e293b; border: 1px solid #334155; border-radius: 6px; padding: 8px 10px;">
+          <div style="color: #64748b; font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px;">DD</div>
+          <div style="color: #ef4444; font-size: 13px; font-family: monospace; font-weight: 600;">3.2%</div>
+        </div>
+      </div>
+      <!-- Recent activity -->
+      <div style="background: #1e293b; border: 1px solid #334155; border-radius: 6px; padding: 8px 10px; margin-bottom: 10px;">
+        <div style="color: #64748b; font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">Recent Trades</div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+          <span style="color: #94a3b8; font-size: 10px; font-family: monospace;">EURUSD Buy 0.10</span>
+          <span style="color: #22c55e; font-size: 10px; font-family: monospace;">+$42.50</span>
+        </div>
+        <div style="display: flex; justify-content: space-between;">
+          <span style="color: #94a3b8; font-size: 10px; font-family: monospace;">GBPJPY Sell 0.05</span>
+          <span style="color: #ef4444; font-size: 10px; font-family: monospace;">-$18.30</span>
+        </div>
+      </div>
+      <!-- Nav cards -->
+      <div style="display: flex; gap: 8px;">
+        <div style="flex: 1; background: #334155; border: 1px solid #475569; border-radius: 6px; padding: 8px; text-align: center; cursor: pointer;">
+          <span style="color: #f1f5f9; font-size: 11px; font-weight: 600;">Live Trading</span>
+        </div>
+        <div style="flex: 1; background: #334155; border: 1px solid #475569; border-radius: 6px; padding: 8px; text-align: center; cursor: pointer;">
+          <span style="color: #f1f5f9; font-size: 11px; font-weight: 600;">Backtests</span>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C. Full Command Center</h3>
+      <p>A hub with quick-glance widgets from both worlds -- live stats, recent trades, backtest summaries. Plus navigation cards at the bottom to dive deeper.</p>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,111 @@
+<h2>Visual Design Direction</h2>
+<p class="subtitle">Which aesthetic feels right for a professional trading journal?</p>
+
+<div class="cards">
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%); padding: 24px; min-height: 220px;">
+      <div style="display: flex; gap: 12px; margin-bottom: 16px;">
+        <div style="background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 16px; flex: 1;">
+          <div style="color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: 1px;">Balance</div>
+          <div style="color: #f1f5f9; font-size: 22px; font-weight: 600; margin-top: 4px; font-family: monospace;">$12,450.00</div>
+          <div style="color: #22c55e; font-size: 12px; margin-top: 4px;">+2.4%</div>
+        </div>
+        <div style="background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 16px; flex: 1;">
+          <div style="color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: 1px;">Drawdown</div>
+          <div style="color: #f1f5f9; font-size: 22px; font-weight: 600; margin-top: 4px; font-family: monospace;">3.2%</div>
+          <div style="color: #ef4444; font-size: 12px; margin-top: 4px;">Max: 5.1%</div>
+        </div>
+      </div>
+      <div style="background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 16px 16px 8px;">
+        <div style="color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Equity Curve</div>
+        <svg viewBox="0 0 300 60" style="width: 100%; height: 60px;">
+          <defs>
+            <linearGradient id="gradA" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.3"/>
+              <stop offset="100%" stop-color="#3b82f6" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <path d="M0,50 L20,48 L40,45 L60,42 L80,44 L100,38 L120,35 L140,30 L160,32 L180,25 L200,22 L220,18 L240,20 L260,14 L280,10 L300,8" fill="none" stroke="#3b82f6" stroke-width="2"/>
+          <path d="M0,50 L20,48 L40,45 L60,42 L80,44 L100,38 L120,35 L140,30 L160,32 L180,25 L200,22 L220,18 L240,20 L260,14 L280,10 L300,8 L300,60 L0,60Z" fill="url(#gradA)"/>
+        </svg>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A. Bloomberg Terminal</h3>
+      <p>Deep navy/slate tones. Dense information display. Muted borders, uppercase labels, monospace numbers. Feels like institutional trading software.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: #09090b; padding: 24px; min-height: 220px;">
+      <div style="display: flex; gap: 12px; margin-bottom: 16px;">
+        <div style="background: #18181b; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 16px; flex: 1;">
+          <div style="color: #71717a; font-size: 12px; font-weight: 500;">Balance</div>
+          <div style="color: #fafafa; font-size: 22px; font-weight: 500; margin-top: 4px; letter-spacing: -0.5px;">$12,450.00</div>
+          <div style="color: #4ade80; font-size: 12px; margin-top: 4px; font-weight: 500;">+2.4%</div>
+        </div>
+        <div style="background: #18181b; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 16px; flex: 1;">
+          <div style="color: #71717a; font-size: 12px; font-weight: 500;">Drawdown</div>
+          <div style="color: #fafafa; font-size: 22px; font-weight: 500; margin-top: 4px; letter-spacing: -0.5px;">3.2%</div>
+          <div style="color: #f87171; font-size: 12px; margin-top: 4px; font-weight: 500;">Max: 5.1%</div>
+        </div>
+      </div>
+      <div style="background: #18181b; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 16px 16px 8px;">
+        <div style="color: #71717a; font-size: 12px; font-weight: 500; margin-bottom: 8px;">Equity Curve</div>
+        <svg viewBox="0 0 300 60" style="width: 100%; height: 60px;">
+          <defs>
+            <linearGradient id="gradB" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#4ade80" stop-opacity="0.15"/>
+              <stop offset="100%" stop-color="#4ade80" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <path d="M0,50 L20,48 L40,45 L60,42 L80,44 L100,38 L120,35 L140,30 L160,32 L180,25 L200,22 L220,18 L240,20 L260,14 L280,10 L300,8" fill="none" stroke="#4ade80" stroke-width="1.5" stroke-opacity="0.8"/>
+          <path d="M0,50 L20,48 L40,45 L60,42 L80,44 L100,38 L120,35 L140,30 L160,32 L180,25 L200,22 L220,18 L240,20 L260,14 L280,10 L300,8 L300,60 L0,60Z" fill="url(#gradB)"/>
+        </svg>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B. Modern Minimal</h3>
+      <p>Pure black background. Subtle borders with low opacity. Rounded corners, generous spacing, clean typography. Feels like a modern fintech app (Linear, Vercel style).</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: linear-gradient(180deg, #0c0a1a 0%, #110e24 100%); padding: 24px; min-height: 220px;">
+      <div style="display: flex; gap: 12px; margin-bottom: 16px;">
+        <div style="background: rgba(139,92,246,0.08); border: 1px solid rgba(139,92,246,0.2); border-radius: 12px; padding: 16px; flex: 1;">
+          <div style="color: #a78bfa; font-size: 11px; text-transform: uppercase; letter-spacing: 1px;">Balance</div>
+          <div style="color: #f5f3ff; font-size: 22px; font-weight: 600; margin-top: 4px;">$12,450.00</div>
+          <div style="color: #34d399; font-size: 12px; margin-top: 4px;">+2.4%</div>
+        </div>
+        <div style="background: rgba(139,92,246,0.08); border: 1px solid rgba(139,92,246,0.2); border-radius: 12px; padding: 16px; flex: 1;">
+          <div style="color: #a78bfa; font-size: 11px; text-transform: uppercase; letter-spacing: 1px;">Drawdown</div>
+          <div style="color: #f5f3ff; font-size: 22px; font-weight: 600; margin-top: 4px;">3.2%</div>
+          <div style="color: #fb7185; font-size: 12px; margin-top: 4px;">Max: 5.1%</div>
+        </div>
+      </div>
+      <div style="background: rgba(139,92,246,0.06); border: 1px solid rgba(139,92,246,0.15); border-radius: 12px; padding: 16px 16px 8px;">
+        <div style="color: #a78bfa; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Equity Curve</div>
+        <svg viewBox="0 0 300 60" style="width: 100%; height: 60px;">
+          <defs>
+            <linearGradient id="gradC" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#8b5cf6" stop-opacity="0.3"/>
+              <stop offset="50%" stop-color="#34d399" stop-opacity="0.2"/>
+              <stop offset="100%" stop-color="#8b5cf6" stop-opacity="0.1"/>
+            </linearGradient>
+          </defs>
+          <path d="M0,50 L20,48 L40,45 L60,42 L80,44 L100,38 L120,35 L140,30 L160,32 L180,25 L200,22 L220,18 L240,20 L260,14 L280,10 L300,8" fill="none" stroke="url(#gradC2)" stroke-width="2"/>
+          <linearGradient id="gradC2" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#8b5cf6"/>
+            <stop offset="100%" stop-color="#34d399"/>
+          </linearGradient>
+          <path d="M0,50 L20,48 L40,45 L60,42 L80,44 L100,38 L120,35 L140,30 L160,32 L180,25 L200,22 L220,18 L240,20 L260,14 L280,10 L300,8 L300,60 L0,60Z" fill="url(#gradC)"/>
+        </svg>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C. Glass & Gradients</h3>
+      <p>Dark purple-tinted backgrounds. Glassmorphism cards with subtle glow effects. Accent gradients. Feels premium and immersive, like a high-end trading platform.</p>
+    </div>
+  </div>
+</div>
