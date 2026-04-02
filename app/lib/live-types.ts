@@ -58,3 +58,23 @@ export interface LiveDataState {
   lastUpdated: Date | null;
   error: string | null;
 }
+
+export interface AccountConfig {
+  id: string;
+  name: string;
+  type: 'live' | 'propfirm';
+  endpoint: string;
+}
+
+export interface AccountsFile {
+  accounts: AccountConfig[];
+}
+
+export interface AccountListItem {
+  id: string;
+  name: string;
+  type: 'live' | 'propfirm';
+  status: LiveStatus;
+  server: string | null;
+  login: number | null;
+}

@@ -1,0 +1,16 @@
+{
+  "accounts": [
+    {
+      "id": "live",
+      "name": "Live Trading",
+      "type": "live",
+      "endpoint": "http://localhost:5555"
+    },
+    {
+      "id": "propfirm-1",
+      "name": "FTMO Challenge",
+      "type": "propfirm",
+      "endpoint": "http://localhost:5556"
+    }
+  ]
+}

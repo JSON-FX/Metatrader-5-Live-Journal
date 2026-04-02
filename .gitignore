@@ -45,3 +45,6 @@ next-env.d.ts
 .playwright-mcp/
 .superpowers/
 .worktrees/
+
+# account config (contains local endpoint URLs)
+accounts.json
