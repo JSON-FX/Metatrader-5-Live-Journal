@@ -5,7 +5,8 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Settings } from 'lucide-react';
 import { useLiveData } from '../hooks/useLiveData';
-import { DisplayMode } from '../lib/live-types';
+import { DisplayMode, PropfirmRule } from '../lib/live-types';
+import ObjectivesTab from '../components/live/ObjectivesTab';
 import LiveAccountPanel from '../components/live/LiveAccountPanel';
 import OpenPositionsTable from '../components/live/OpenPositionsTable';
 import AccountSelector from '../components/live/AccountSelector';
@@ -21,7 +22,7 @@ const LS_KEY = 'mt5-last-account';
 function getInitialTab(): TabId {
   if (typeof window === 'undefined') return 'overview';
   const hash = window.location.hash.slice(1);
-  if (['overview', 'trades', 'calendar', 'performance'].includes(hash)) return hash as TabId;
+  if (['overview', 'objectives', 'trades', 'calendar', 'performance'].includes(hash)) return hash as TabId;
   return 'overview';
 }
 
@@ -32,6 +33,7 @@ function LivePageContent() {
   const [ready, setReady] = useState(false);
   const [activeTab, setActiveTab] = useState<TabId>(getInitialTab);
   const [displayMode, setDisplayMode] = useState<DisplayMode>('money');
+  const [accountRule, setAccountRule] = useState<PropfirmRule | null>(null);
 
   useEffect(() => {
     async function resolveAccount() {
@@ -66,6 +68,30 @@ function LivePageContent() {
 
     resolveAccount();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (!accountId) { setAccountRule(null); return; }
+
+    async function fetchRule() {
+      try {
+        const accountsRes = await fetch('/api/live/accounts');
+        const accountsData = await accountsRes.json();
+        const account = (accountsData.accounts ?? []).find((a: { slug: string }) => a.slug === accountId);
+        if (!account?.rule_id) { setAccountRule(null); return; }
+
+        const ruleRes = await fetch(`/api/live/rules/${account.rule_id}`);
+        if (ruleRes.ok) {
+          setAccountRule(await ruleRes.json());
+        } else {
+          setAccountRule(null);
+        }
+      } catch {
+        setAccountRule(null);
+      }
+    }
+
+    fetchRule();
+  }, [accountId]);
 
   const handleSelectAccount = useCallback(
     (slug: string) => {
@@ -110,12 +136,15 @@ function LivePageContent() {
       )}
 
       <div className="flex items-center justify-between">
-        <LiveTabs activeTab={activeTab} onTabChange={handleTabChange} />
+        <LiveTabs activeTab={activeTab} onTabChange={handleTabChange} showObjectives={!!accountRule} />
         <DisplayModeToggle mode={displayMode} onChange={setDisplayMode} />
       </div>
 
       {activeTab === 'overview' && liveData.account && (
         <OverviewTab trades={liveData.history} balance={liveData.account.balance} displayMode={displayMode} />
+      )}
+      {activeTab === 'objectives' && accountRule && (
+        <ObjectivesTab rule={accountRule} trades={liveData.history} account={liveData.account} />
       )}
       {activeTab === 'trades' && liveData.account && (
         <TradesTab trades={liveData.history} balance={liveData.account.balance} displayMode={displayMode} />

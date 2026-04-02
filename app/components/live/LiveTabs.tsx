@@ -1,23 +1,25 @@
 'use client';
 
-export type TabId = 'overview' | 'trades' | 'calendar' | 'performance';
+export type TabId = 'overview' | 'objectives' | 'trades' | 'calendar' | 'performance';
 
 interface LiveTabsProps {
   activeTab: TabId;
   onTabChange: (tab: TabId) => void;
+  showObjectives?: boolean;
 }
 
-const TABS: { id: TabId; label: string }[] = [
-  { id: 'overview', label: 'Overview' },
-  { id: 'trades', label: 'Trades' },
-  { id: 'calendar', label: 'Calendar' },
-  { id: 'performance', label: 'Performance' },
-];
+export default function LiveTabs({ activeTab, onTabChange, showObjectives = false }: LiveTabsProps) {
+  const tabs: { id: TabId; label: string }[] = [
+    { id: 'overview', label: 'Overview' },
+    ...(showObjectives ? [{ id: 'objectives' as TabId, label: 'Objectives' }] : []),
+    { id: 'trades', label: 'Trades' },
+    { id: 'calendar', label: 'Calendar' },
+    { id: 'performance', label: 'Performance' },
+  ];
 
-export default function LiveTabs({ activeTab, onTabChange }: LiveTabsProps) {
   return (
     <div className="flex gap-0 border-b border-border">
-      {TABS.map(tab => (
+      {tabs.map(tab => (
         <button
           key={tab.id}
           onClick={() => onTabChange(tab.id)}
