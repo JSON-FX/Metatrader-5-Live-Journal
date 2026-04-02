@@ -18,35 +18,39 @@ function LivePageContent() {
   const [accountId, setAccountId] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
 
-  // Resolve account ID on mount: URL param > localStorage > first account
   useEffect(() => {
-    const urlAccount = searchParams.get('account');
-    if (urlAccount) {
-      setAccountId(urlAccount);
-      localStorage.setItem(LS_KEY, urlAccount);
-    } else {
-      const stored = localStorage.getItem(LS_KEY);
-      if (stored) {
-        setAccountId(stored);
-        router.replace(`/live?account=${encodeURIComponent(stored)}`);
-      } else {
-        // Fetch accounts to get the first one
-        fetch('/api/live/accounts')
-          .then((r) => r.json())
-          .then((data) => {
-            if (data.accounts?.length > 0) {
-              const firstId = data.accounts[0].id;
-              setAccountId(firstId);
-              localStorage.setItem(LS_KEY, firstId);
-              router.replace(`/live?account=${encodeURIComponent(firstId)}`);
-            }
-          })
-          .catch(() => {
-            // fallback — useLiveData will handle null accountId
-          });
+    async function resolveAccount() {
+      const urlAccount = searchParams.get('account');
+
+      // Fetch available accounts for validation
+      let availableIds: string[] = [];
+      try {
+        const res = await fetch('/api/live/accounts');
+        const data = await res.json();
+        availableIds = (data.accounts ?? []).map((a: { id: string }) => a.id);
+      } catch {
+        // If we can't fetch accounts, accept any ID
       }
+
+      if (urlAccount && (availableIds.length === 0 || availableIds.includes(urlAccount))) {
+        setAccountId(urlAccount);
+        localStorage.setItem(LS_KEY, urlAccount);
+      } else {
+        const stored = localStorage.getItem(LS_KEY);
+        if (stored && (availableIds.length === 0 || availableIds.includes(stored))) {
+          setAccountId(stored);
+          router.replace(`/live?account=${encodeURIComponent(stored)}`);
+        } else if (availableIds.length > 0) {
+          const firstId = availableIds[0];
+          setAccountId(firstId);
+          localStorage.setItem(LS_KEY, firstId);
+          router.replace(`/live?account=${encodeURIComponent(firstId)}`);
+        }
+      }
+      setReady(true);
     }
-    setReady(true);
+
+    resolveAccount();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSelectAccount = useCallback(
