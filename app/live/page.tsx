@@ -7,18 +7,28 @@ import { Settings } from 'lucide-react';
 import { useLiveData } from '../hooks/useLiveData';
 import LiveAccountPanel from '../components/live/LiveAccountPanel';
 import OpenPositionsTable from '../components/live/OpenPositionsTable';
-import LiveEquityChart from '../components/live/LiveEquityChart';
-import LiveTradesTable from '../components/live/LiveTradesTable';
 import AccountSelector from '../components/live/AccountSelector';
+import LiveTabs, { TabId } from '../components/live/LiveTabs';
+import OverviewTab from '../components/live/OverviewTab';
+import TradesTab from '../components/live/TradesTab';
+import CalendarTab from '../components/live/CalendarTab';
+import PerformanceTab from '../components/live/PerformanceTab';
 
 const LS_KEY = 'mt5-last-account';
+
+function getInitialTab(): TabId {
+  if (typeof window === 'undefined') return 'overview';
+  const hash = window.location.hash.slice(1);
+  if (['overview', 'trades', 'calendar', 'performance'].includes(hash)) return hash as TabId;
+  return 'overview';
+}
 
 function LivePageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const [historyDays, setHistoryDays] = useState(90);
   const [accountId, setAccountId] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
+  const [activeTab, setActiveTab] = useState<TabId>(getInitialTab);
 
   useEffect(() => {
     async function resolveAccount() {
@@ -63,7 +73,12 @@ function LivePageContent() {
     [router]
   );
 
-  const liveData = useLiveData(accountId, historyDays);
+  function handleTabChange(tab: TabId) {
+    setActiveTab(tab);
+    window.location.hash = tab;
+  }
+
+  const liveData = useLiveData(accountId);
 
   if (!ready) return null;
 
@@ -91,16 +106,25 @@ function LivePageContent() {
         <OpenPositionsTable positions={liveData.positions} />
       )}
 
-      {liveData.status === 'online' && liveData.account && (
-        <LiveEquityChart trades={liveData.history} balance={liveData.account.balance} />
+      <LiveTabs activeTab={activeTab} onTabChange={handleTabChange} />
+
+      {activeTab === 'overview' && liveData.account && (
+        <OverviewTab trades={liveData.history} balance={liveData.account.balance} />
+      )}
+      {activeTab === 'trades' && liveData.account && (
+        <TradesTab trades={liveData.history} balance={liveData.account.balance} />
+      )}
+      {activeTab === 'calendar' && liveData.account && (
+        <CalendarTab trades={liveData.history} balance={liveData.account.balance} />
+      )}
+      {activeTab === 'performance' && (
+        <PerformanceTab trades={liveData.history} />
       )}
 
-      {liveData.status === 'online' && (
-        <LiveTradesTable
-          trades={liveData.history}
-          historyDays={historyDays}
-          onChangeDays={setHistoryDays}
-        />
+      {!liveData.account && liveData.history.length === 0 && activeTab !== 'overview' && (
+        <div className="py-16 text-center text-text-muted text-sm">
+          Waiting for account data...
+        </div>
       )}
     </main>
   );
