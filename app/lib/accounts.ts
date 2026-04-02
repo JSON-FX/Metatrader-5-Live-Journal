@@ -6,7 +6,7 @@ export async function loadAccounts(): Promise<AccountConfig[]> {
   try {
     const db = await getDb();
     const [rows] = await db.execute<RowDataPacket[]>(
-      'SELECT id, slug, name, type, endpoint, sort_order FROM mt5_accounts ORDER BY sort_order ASC, id ASC'
+      'SELECT id, slug, name, type, endpoint, sort_order, rule_id FROM mt5_accounts ORDER BY sort_order ASC, id ASC'
     );
     return rows as AccountConfig[];
   } catch {
@@ -42,7 +42,7 @@ export async function getAccountById(id: number): Promise<AccountConfig | null> 
   try {
     const db = await getDb();
     const [rows] = await db.execute<RowDataPacket[]>(
-      'SELECT id, slug, name, type, endpoint, sort_order FROM mt5_accounts WHERE id = ?',
+      'SELECT id, slug, name, type, endpoint, sort_order, rule_id FROM mt5_accounts WHERE id = ?',
       [id]
     );
     return rows.length > 0 ? (rows[0] as AccountConfig) : null;
@@ -51,24 +51,25 @@ export async function getAccountById(id: number): Promise<AccountConfig | null> 
   }
 }
 
-export async function createAccount(data: { slug: string; name: string; type: string; endpoint: string }): Promise<AccountConfig> {
+export async function createAccount(data: { slug: string; name: string; type: string; endpoint: string; rule_id?: number | null }): Promise<AccountConfig> {
   const db = await getDb();
   const [result] = await db.execute(
-    'INSERT INTO mt5_accounts (slug, name, type, endpoint) VALUES (?, ?, ?, ?)',
-    [data.slug, data.name, data.type, data.endpoint]
+    'INSERT INTO mt5_accounts (slug, name, type, endpoint, rule_id) VALUES (?, ?, ?, ?, ?)',
+    [data.slug, data.name, data.type, data.endpoint, data.rule_id ?? null]
   );
   const insertId = (result as { insertId: number }).insertId;
   return (await getAccountById(insertId))!;
 }
 
-export async function updateAccount(id: number, data: { slug?: string; name?: string; type?: string; endpoint?: string }): Promise<AccountConfig | null> {
+export async function updateAccount(id: number, data: { slug?: string; name?: string; type?: string; endpoint?: string; rule_id?: number | null }): Promise<AccountConfig | null> {
   const fields: string[] = [];
-  const values: (string | number)[] = [];
+  const values: (string | number | null)[] = [];
 
   if (data.slug !== undefined) { fields.push('slug = ?'); values.push(data.slug); }
   if (data.name !== undefined) { fields.push('name = ?'); values.push(data.name); }
   if (data.type !== undefined) { fields.push('type = ?'); values.push(data.type); }
   if (data.endpoint !== undefined) { fields.push('endpoint = ?'); values.push(data.endpoint); }
+  if (data.rule_id !== undefined) { fields.push('rule_id = ?'); values.push(data.rule_id); }
 
   if (fields.length === 0) return getAccountById(id);
 
