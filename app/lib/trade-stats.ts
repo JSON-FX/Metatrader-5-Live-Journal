@@ -1,4 +1,5 @@
 import { LiveTrade } from './live-types';
+import { MT5Deal } from './types';
 
 export interface TradeStats {
   netProfit: number;
@@ -205,6 +206,91 @@ export function calculateStreaks(trades: LiveTrade[]): StreakData {
   let currentWinTrades = 0, currentLoseTrades = 0;
   for (let i = sorted.length - 1; i >= 0; i--) {
     const net = sorted[i].profit + sorted[i].commission + sorted[i].swap;
+    if (net > 0) { if (currentLoseTrades > 0) break; currentWinTrades++; }
+    else { if (currentWinTrades > 0) break; currentLoseTrades++; }
+  }
+
+  return {
+    winStreak: currentWinDays,
+    maxWinStreak: maxWinDayStreak,
+    loseStreak: currentLoseDays,
+    maxLoseStreak: maxLoseDayStreak,
+    winStreakTrades: currentWinTrades,
+    maxWinStreakTrades: maxWinTradeStreak,
+    loseStreakTrades: currentLoseTrades,
+    maxLoseStreakTrades: maxLoseTradeStreak,
+  };
+}
+
+export function calculateStreaksFromDeals(
+  deals: MT5Deal[],
+  dateRange?: { start: string; end: string }
+): StreakData {
+  // Filter to closing deals with a symbol
+  let closingDeals = deals.filter(d => d.direction === 'out' && d.symbol);
+
+  if (dateRange) {
+    closingDeals = closingDeals.filter(d => {
+      const date = d.time.split(' ')[0].replace(/[\/\.]/g, '-');
+      return date >= dateRange.start && date <= dateRange.end;
+    });
+  }
+
+  const sorted = [...closingDeals].sort((a, b) => {
+    const ta = a.time.replace(/[\/\.]/g, '-');
+    const tb = b.time.replace(/[\/\.]/g, '-');
+    return ta.localeCompare(tb);
+  });
+
+  // Build daily PnL map
+  const dailyPnl: Record<string, number> = {};
+  for (const deal of sorted) {
+    const date = deal.time.split(' ')[0].replace(/[\/\.]/g, '-');
+    dailyPnl[date] = (dailyPnl[date] || 0) + deal.profit + (deal.commission || 0) + (deal.swap || 0);
+  }
+  const sortedDays = Object.keys(dailyPnl).sort();
+
+  // Day streaks (win + lose)
+  let winDayStreak = 0, maxWinDayStreak = 0;
+  let loseDayStreak = 0, maxLoseDayStreak = 0;
+  for (const day of sortedDays) {
+    if (dailyPnl[day] > 0) {
+      winDayStreak++; loseDayStreak = 0;
+      if (winDayStreak > maxWinDayStreak) maxWinDayStreak = winDayStreak;
+    } else if (dailyPnl[day] < 0) {
+      loseDayStreak++; winDayStreak = 0;
+      if (loseDayStreak > maxLoseDayStreak) maxLoseDayStreak = loseDayStreak;
+    } else {
+      winDayStreak = 0; loseDayStreak = 0;
+    }
+  }
+
+  // Current day streaks (from end)
+  let currentWinDays = 0, currentLoseDays = 0;
+  for (let i = sortedDays.length - 1; i >= 0; i--) {
+    if (dailyPnl[sortedDays[i]] > 0) { if (currentLoseDays > 0) break; currentWinDays++; }
+    else if (dailyPnl[sortedDays[i]] < 0) { if (currentWinDays > 0) break; currentLoseDays++; }
+    else break;
+  }
+
+  // Trade streaks (win + lose)
+  let winTradeStreak = 0, maxWinTradeStreak = 0;
+  let loseTradeStreak = 0, maxLoseTradeStreak = 0;
+  for (const deal of sorted) {
+    const net = deal.profit + (deal.commission || 0) + (deal.swap || 0);
+    if (net > 0) {
+      winTradeStreak++; loseTradeStreak = 0;
+      if (winTradeStreak > maxWinTradeStreak) maxWinTradeStreak = winTradeStreak;
+    } else {
+      loseTradeStreak++; winTradeStreak = 0;
+      if (loseTradeStreak > maxLoseTradeStreak) maxLoseTradeStreak = loseTradeStreak;
+    }
+  }
+
+  // Current trade streaks (from end)
+  let currentWinTrades = 0, currentLoseTrades = 0;
+  for (let i = sorted.length - 1; i >= 0; i--) {
+    const net = sorted[i].profit + (sorted[i].commission || 0) + (sorted[i].swap || 0);
     if (net > 0) { if (currentLoseTrades > 0) break; currentWinTrades++; }
     else { if (currentWinTrades > 0) break; currentLoseTrades++; }
   }
