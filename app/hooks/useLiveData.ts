@@ -3,9 +3,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { LiveDataState, LiveAccountInfo, LivePosition, LiveTrade } from '../lib/live-types';
 
-const POLL_INTERVAL = 5_000; // 5s for live data (account, positions, history)
+const POLL_INTERVAL = 5_000;
 
-export function useLiveData(historyDays = 90): LiveDataState {
+export function useLiveData(accountId: string | null, historyDays = 90): LiveDataState {
   const [state, setState] = useState<LiveDataState>({
     status: 'connecting',
     account: null,
@@ -19,18 +19,33 @@ export function useLiveData(historyDays = 90): LiveDataState {
   const lastHistory = useRef<LiveTrade[]>([]);
 
   useEffect(() => {
+    // Reset state when account changes
+    setState({
+      status: 'connecting',
+      account: null,
+      positions: [],
+      history: [],
+      lastUpdated: null,
+      error: null,
+    });
+    lastHistory.current = [];
+
+    if (!accountId) return;
+
     let liveTimeout: ReturnType<typeof setTimeout>;
 
     async function pollLive() {
       abortRef.current = new AbortController();
       const signal = abortRef.current.signal;
 
+      const q = `accountId=${encodeURIComponent(accountId!)}`;
+
       try {
         const [healthRes, accountRes, positionsRes, historyRes] = await Promise.all([
-          fetch('/api/live/health',    { signal }),
-          fetch('/api/live/account',   { signal }),
-          fetch('/api/live/positions', { signal }),
-          fetch(`/api/live/history?days=${historyDays}`, { signal }),
+          fetch(`/api/live/health?${q}`,    { signal }),
+          fetch(`/api/live/account?${q}`,   { signal }),
+          fetch(`/api/live/positions?${q}`, { signal }),
+          fetch(`/api/live/history?${q}&days=${historyDays}`, { signal }),
         ]);
 
         if (signal.aborted) return;
@@ -81,7 +96,7 @@ export function useLiveData(historyDays = 90): LiveDataState {
       clearTimeout(liveTimeout);
       abortRef.current?.abort();
     };
-  }, [historyDays]);
+  }, [accountId, historyDays]);
 
   return state;
 }
