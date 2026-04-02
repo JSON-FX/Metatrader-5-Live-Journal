@@ -48,7 +48,7 @@ export default function ReportPerformance({ report, displayMode }: ReportPerform
         const val = monthMap.get(`${year}-${m}`);
         if (val !== undefined) months[m] = val;
       }
-      const total = months.reduce((sum, m) => sum + (m ?? 0), 0);
+      const total = months.reduce<number>((sum, m) => sum + (m ?? 0), 0);
       return { year, months, total };
     });
   }, [deals]);
