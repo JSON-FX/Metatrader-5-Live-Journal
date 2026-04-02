@@ -113,7 +113,7 @@ export default function ReportCalendar({ report, displayMode }: ReportCalendarPr
       weeklyTotals: weekly,
       monthStats: { trades: monthTrades, wins: monthWins, profit: monthProfit, percent: monthPercent },
     };
-  }, [deals, settings, currentDate, year, month, initialDeposit]);
+  }, [deals, year, month, initialDeposit]);
 
   // Streaks: month-scoped (to selected calendar month) and all-time
   const monthDateRange = useMemo(() => {
