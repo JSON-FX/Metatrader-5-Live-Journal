@@ -21,6 +21,7 @@ export async function GET() {
             status: 'online' as const,
             server: health.server ?? null,
             login: health.account ?? null,
+            rule_id: account.rule_id,
           };
         }
       } catch {
@@ -35,6 +36,7 @@ export async function GET() {
         status: 'offline' as const,
         server: null,
         login: null,
+        rule_id: account.rule_id,
       };
     })
   );
@@ -45,7 +47,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { slug, name, type, endpoint } = body;
+    const { slug, name, type, endpoint, rule_id } = body;
 
     if (!slug || !name || !endpoint) {
       return NextResponse.json({ error: 'slug, name, and endpoint are required' }, { status: 400 });
@@ -55,7 +57,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'type must be "live" or "propfirm"' }, { status: 400 });
     }
 
-    const account = await createAccount({ slug, name, type: type ?? 'live', endpoint });
+    const account = await createAccount({ slug, name, type: type ?? 'live', endpoint, rule_id: rule_id ?? null });
     return NextResponse.json(account, { status: 201 });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Failed to create account';

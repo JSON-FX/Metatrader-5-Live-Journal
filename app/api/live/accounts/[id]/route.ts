@@ -16,13 +16,13 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
   try {
     const body = await req.json();
-    const { slug, name, type, endpoint } = body;
+    const { slug, name, type, endpoint, rule_id } = body;
 
     if (type && type !== 'live' && type !== 'propfirm') {
       return NextResponse.json({ error: 'type must be "live" or "propfirm"' }, { status: 400 });
     }
 
-    const updated = await updateAccount(id, { slug, name, type, endpoint });
+    const updated = await updateAccount(id, { slug, name, type, endpoint, rule_id });
     return NextResponse.json(updated);
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Failed to update account';

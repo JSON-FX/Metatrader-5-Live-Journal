@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAccountById } from '../../../../../lib/accounts';
+import { getRuleById } from '../../../../../lib/rules';
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id: idStr } = await params;
@@ -14,5 +15,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: 'Account not found' }, { status: 404 });
   }
 
-  return NextResponse.json(account);
+  const rule = account.rule_id ? await getRuleById(account.rule_id) : null;
+
+  return NextResponse.json({ ...account, rule });
 }
