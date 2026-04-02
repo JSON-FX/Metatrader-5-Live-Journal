@@ -1,5 +1,5 @@
-import { NextResponse } from 'next/server';
-import { loadAccounts } from '../../../lib/accounts';
+import { NextRequest, NextResponse } from 'next/server';
+import { loadAccounts, createAccount } from '../../../lib/accounts';
 import { AccountListItem } from '../../../lib/live-types';
 
 export async function GET() {
@@ -15,6 +15,7 @@ export async function GET() {
           const health = await res.json();
           return {
             id: account.id,
+            slug: account.slug,
             name: account.name,
             type: account.type,
             status: 'online' as const,
@@ -28,6 +29,7 @@ export async function GET() {
 
       return {
         id: account.id,
+        slug: account.slug,
         name: account.name,
         type: account.type,
         status: 'offline' as const,
@@ -38,4 +40,28 @@ export async function GET() {
   );
 
   return NextResponse.json({ accounts: results });
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const { slug, name, type, endpoint } = body;
+
+    if (!slug || !name || !endpoint) {
+      return NextResponse.json({ error: 'slug, name, and endpoint are required' }, { status: 400 });
+    }
+
+    if (type && type !== 'live' && type !== 'propfirm') {
+      return NextResponse.json({ error: 'type must be "live" or "propfirm"' }, { status: 400 });
+    }
+
+    const account = await createAccount({ slug, name, type: type ?? 'live', endpoint });
+    return NextResponse.json(account, { status: 201 });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Failed to create account';
+    if (message.includes('Duplicate entry')) {
+      return NextResponse.json({ error: 'Account with this slug already exists' }, { status: 400 });
+    }
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 }
