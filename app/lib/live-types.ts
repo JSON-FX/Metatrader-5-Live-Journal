@@ -68,6 +68,7 @@ export interface AccountConfig {
   type: 'live' | 'propfirm';
   endpoint: string;
   sort_order: number;
+  rule_id: number | null;
 }
 
 export interface AccountListItem {
@@ -78,4 +79,29 @@ export interface AccountListItem {
   status: LiveStatus;
   server: string | null;
   login: number | null;
+  rule_id: number | null;
+}
+
+export interface PropfirmRule {
+  id: number;
+  name: string;
+  account_size: number;
+  max_daily_loss: number;
+  daily_loss_type: 'money' | 'percent';
+  daily_loss_calc: 'balance' | 'equity';
+  max_total_loss: number;
+  total_loss_type: 'money' | 'percent';
+  profit_target: number;
+  target_type: 'money' | 'percent';
+  min_trading_days: number;
+  max_trading_days: number | null;
+}
+
+export type ObjectiveStatus = 'passing' | 'failed' | 'in_progress';
+
+export interface ObjectiveResult {
+  name: string;
+  result: string;
+  target: string;
+  status: ObjectiveStatus;
 }
