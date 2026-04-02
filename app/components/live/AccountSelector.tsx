@@ -1,12 +1,13 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Settings } from 'lucide-react';
+import Link from 'next/link';
 import { AccountListItem, LiveStatus } from '../../lib/live-types';
 
 interface AccountSelectorProps {
   selectedId: string | null;
-  onSelect: (accountId: string) => void;
+  onSelect: (accountSlug: string) => void;
 }
 
 function StatusDot({ status }: { status: LiveStatus }) {
@@ -33,7 +34,7 @@ export default function AccountSelector({ selectedId, onSelect }: AccountSelecto
     }
 
     fetchAccounts();
-    const interval = setInterval(fetchAccounts, 30_000); // refresh status every 30s
+    const interval = setInterval(fetchAccounts, 30_000);
     return () => clearInterval(interval);
   }, []);
 
@@ -47,9 +48,19 @@ export default function AccountSelector({ selectedId, onSelect }: AccountSelecto
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const selected = accounts.find((a) => a.id === selectedId);
+  const selected = accounts.find((a) => a.slug === selectedId);
 
-  if (accounts.length === 0) return null;
+  if (accounts.length === 0) {
+    return (
+      <Link
+        href="/live/settings"
+        className="flex items-center gap-2 text-sm text-text-muted hover:text-text-primary transition-colors"
+      >
+        <Settings className="w-4 h-4" />
+        No accounts — Configure
+      </Link>
+    );
+  }
 
   return (
     <div ref={ref} className="relative">
@@ -68,13 +79,13 @@ export default function AccountSelector({ selectedId, onSelect }: AccountSelecto
         <div className="absolute top-full left-0 right-0 mt-1 bg-bg-secondary border border-border rounded-lg shadow-lg overflow-hidden z-50">
           {accounts.map((account) => (
             <button
-              key={account.id}
+              key={account.slug}
               onClick={() => {
-                onSelect(account.id);
+                onSelect(account.slug);
                 setOpen(false);
               }}
               className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-left hover:bg-bg-tertiary transition-colors border-l-2 ${
-                account.id === selectedId
+                account.slug === selectedId
                   ? 'border-l-accent bg-accent/5'
                   : 'border-l-transparent'
               }`}
