@@ -102,6 +102,9 @@ export function calculateDisciplineScore(
   const balance = account?.balance ?? rule.account_size;
   const scores: number[] = [];
 
+  // Discipline score only measures risk metrics (how far from violation),
+  // NOT profit target progress. A fresh account with no violations = 100%.
+
   // Daily loss safety
   const dailyLimit = resolveLimit(rule.max_daily_loss, rule.daily_loss_type, rule.account_size);
   const todayStr = new Date().toISOString().slice(0, 10);
@@ -115,11 +118,6 @@ export function calculateDisciplineScore(
   const totalLimit = resolveLimit(rule.max_total_loss, rule.total_loss_type, rule.account_size);
   const totalLoss = Math.max(0, rule.account_size - equity);
   if (totalLimit > 0) scores.push(Math.max(0, Math.min(100, ((totalLimit - totalLoss) / totalLimit) * 100)));
-
-  // Profit target progress
-  const targetLimit = resolveLimit(rule.profit_target, rule.target_type, rule.account_size);
-  const currentProfit = balance - rule.account_size;
-  if (targetLimit > 0) scores.push(Math.max(0, Math.min(100, (currentProfit / targetLimit) * 100)));
 
   if (scores.length === 0) return 0;
   return Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
