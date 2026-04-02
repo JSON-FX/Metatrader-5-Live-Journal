@@ -7,10 +7,12 @@ interface AccountFormData {
   name: string;
   type: 'live' | 'propfirm';
   endpoint: string;
+  rule_id: number | null;
 }
 
 interface AccountFormProps {
   initial?: AccountFormData;
+  rules?: { id: number; name: string }[];
   onSave: (data: AccountFormData) => Promise<void>;
   onCancel: () => void;
   saving: boolean;
@@ -24,11 +26,12 @@ function toSlug(name: string): string {
     .replace(/^-|-$/g, '');
 }
 
-export default function AccountForm({ initial, onSave, onCancel, saving, error }: AccountFormProps) {
+export default function AccountForm({ initial, rules, onSave, onCancel, saving, error }: AccountFormProps) {
   const [name, setName] = useState(initial?.name ?? '');
   const [slug, setSlug] = useState(initial?.slug ?? '');
   const [type, setType] = useState<'live' | 'propfirm'>(initial?.type ?? 'live');
   const [endpoint, setEndpoint] = useState(initial?.endpoint ?? '');
+  const [ruleId, setRuleId] = useState<number | null>(initial?.rule_id ?? null);
   const [slugTouched, setSlugTouched] = useState(!!initial);
 
   useEffect(() => {
@@ -39,7 +42,7 @@ export default function AccountForm({ initial, onSave, onCancel, saving, error }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    await onSave({ slug, name, type, endpoint });
+    await onSave({ slug, name, type, endpoint, rule_id: type === 'propfirm' ? ruleId : null });
   }
 
   const inputClass = 'w-full bg-bg-primary border border-border rounded-lg px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent transition-colors';
@@ -104,6 +107,21 @@ export default function AccountForm({ initial, onSave, onCancel, saving, error }
             className={inputClass}
           />
         </div>
+        {type === 'propfirm' && rules && rules.length > 0 && (
+          <div>
+            <label className={labelClass}>Rule Set</label>
+            <select
+              value={ruleId ?? ''}
+              onChange={(e) => setRuleId(e.target.value ? Number(e.target.value) : null)}
+              className={inputClass}
+            >
+              <option value="">None</option>
+              {rules.map(r => (
+                <option key={r.id} value={r.id}>{r.name}</option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
 
       <div className="flex items-center gap-3 pt-1">

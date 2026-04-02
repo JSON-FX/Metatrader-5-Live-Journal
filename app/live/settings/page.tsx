@@ -8,7 +8,7 @@ import AccountForm from '../../components/live/AccountForm';
 import AccountList from '../../components/live/AccountList';
 import EmptyState from '../../components/shared/EmptyState';
 
-type FormMode = { type: 'closed' } | { type: 'add' } | { type: 'edit'; account: AccountListItem; endpoint: string };
+type FormMode = { type: 'closed' } | { type: 'add' } | { type: 'edit'; account: AccountListItem; endpoint: string; ruleId: number | null };
 
 export default function SettingsPage() {
   const [accounts, setAccounts] = useState<AccountListItem[]>([]);
@@ -16,6 +16,7 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [rules, setRules] = useState<{ id: number; name: string }[]>([]);
 
   const fetchAccounts = useCallback(async () => {
     try {
@@ -35,7 +36,11 @@ export default function SettingsPage() {
     fetchAccounts();
   }, [fetchAccounts]);
 
-  async function handleSave(data: { slug: string; name: string; type: 'live' | 'propfirm'; endpoint: string }) {
+  useEffect(() => {
+    fetch('/api/live/rules').then(r => r.json()).then(d => setRules(d.rules ?? [])).catch(() => {});
+  }, []);
+
+  async function handleSave(data: { slug: string; name: string; type: 'live' | 'propfirm'; endpoint: string; rule_id: number | null }) {
     setSaving(true);
     setFormError(null);
 
@@ -83,7 +88,7 @@ export default function SettingsPage() {
       const res = await fetch(`/api/live/accounts/${account.id}/detail`);
       if (res.ok) {
         const detail = await res.json();
-        setFormMode({ type: 'edit', account, endpoint: detail.endpoint });
+        setFormMode({ type: 'edit', account, endpoint: detail.endpoint, ruleId: detail.rule_id ?? null });
       }
     } catch {
       setFormError('Could not load account details');
@@ -99,24 +104,31 @@ export default function SettingsPage() {
           <h2 className="text-sm font-semibold text-text-primary uppercase tracking-[0.5px]">Account Settings</h2>
           <p className="text-xs text-text-muted mt-0.5">Manage your MT5 account connections</p>
         </div>
-        {accounts.length > 0 && formMode.type === 'closed' && (
-          <button
-            onClick={() => { setFormMode({ type: 'add' }); setFormError(null); }}
-            className="flex items-center gap-2 px-3 py-1.5 bg-accent text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
-          >
-            <Plus className="w-4 h-4" />
-            Add Account
-          </button>
-        )}
+        <div className="flex items-center gap-3">
+          <Link href="/live/rules" className="text-sm text-accent hover:text-accent/80 transition-colors">
+            Manage Rule Sets
+          </Link>
+          {accounts.length > 0 && formMode.type === 'closed' && (
+            <button
+              onClick={() => { setFormMode({ type: 'add' }); setFormError(null); }}
+              className="flex items-center gap-2 px-3 py-1.5 bg-accent text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
+            >
+              <Plus className="w-4 h-4" />
+              Add Account
+            </button>
+          )}
+        </div>
       </div>
 
       {formMode.type !== 'closed' && (
         <AccountForm
+          rules={rules}
           initial={formMode.type === 'edit' ? {
             slug: formMode.account.slug,
             name: formMode.account.name,
             type: formMode.account.type,
             endpoint: formMode.endpoint,
+            rule_id: formMode.ruleId,
           } : undefined}
           onSave={handleSave}
           onCancel={() => setFormMode({ type: 'closed' })}
