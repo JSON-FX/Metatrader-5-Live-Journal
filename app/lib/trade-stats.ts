@@ -200,3 +200,56 @@ export function calculateWinStreaks(trades: LiveTrade[]): WinStreaks {
     maxTrades: bestTradeStreak,
   };
 }
+
+/**
+ * Calculate Risk:Reward ratio for a trade.
+ * RR = actual profit / risk amount, where risk = |entry - SL| * volume * point_value
+ * Since we don't have point_value, we use the simpler price-based ratio:
+ * RR = |close - open| / |open - SL|
+ * Returns null if SL is not set.
+ */
+export function calculateRR(trade: LiveTrade): number | null {
+  if (!trade.sl) return null;
+
+  const risk = Math.abs(trade.open_price - trade.sl);
+  if (risk === 0) return null;
+
+  const reward = trade.type === 'buy'
+    ? trade.close_price - trade.open_price
+    : trade.open_price - trade.close_price;
+
+  return reward / risk;
+}
+
+/**
+ * Format a value based on display mode.
+ */
+export function formatValue(
+  pnl: number,
+  mode: 'money' | 'percent' | 'rr',
+  opts?: { startingCapital?: number; trade?: LiveTrade }
+): string {
+  if (mode === 'money') {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency', currency: 'USD',
+      minimumFractionDigits: 2, maximumFractionDigits: 2,
+    }).format(pnl);
+  }
+
+  if (mode === 'percent') {
+    const capital = opts?.startingCapital ?? 0;
+    if (capital <= 0) return '0.00%';
+    const pct = (pnl / capital) * 100;
+    return `${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%`;
+  }
+
+  if (mode === 'rr') {
+    const trade = opts?.trade;
+    if (!trade) return formatValue(pnl, 'money');
+    const rr = calculateRR(trade);
+    if (rr === null) return 'N/A';
+    return `${rr >= 0 ? '+' : ''}${rr.toFixed(2)}R`;
+  }
+
+  return String(pnl);
+}

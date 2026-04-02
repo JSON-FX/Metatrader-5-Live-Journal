@@ -2,12 +2,13 @@
 
 import { useState, useMemo } from 'react';
 import { ChevronLeft, ChevronRight, Flame } from 'lucide-react';
-import { LiveTrade } from '../../lib/live-types';
-import { groupByDay, calculateWinStreaks, DailyPnl } from '../../lib/trade-stats';
+import { LiveTrade, DisplayMode } from '../../lib/live-types';
+import { groupByDay, calculateWinStreaks, DailyPnl, formatValue } from '../../lib/trade-stats';
 
 interface CalendarTabProps {
   trades: LiveTrade[];
   balance: number;
+  displayMode: DisplayMode;
 }
 
 function formatCurrency(value: number): string {
@@ -20,7 +21,7 @@ function formatCurrency(value: number): string {
 const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-export default function CalendarTab({ trades, balance }: CalendarTabProps) {
+export default function CalendarTab({ trades, balance, displayMode }: CalendarTabProps) {
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth());
@@ -107,7 +108,7 @@ export default function CalendarTab({ trades, balance }: CalendarTabProps) {
           <div className="flex items-center gap-4 text-xs font-mono">
             <span className="text-text-muted">Trades <span className="text-text-primary font-semibold">{monthSummary.trades}</span></span>
             <span className="text-text-muted">Wins <span className="text-text-primary font-semibold">{monthSummary.wins}</span></span>
-            <span className="text-text-muted">P/L <span className={monthSummary.pnl >= 0 ? 'text-profit font-semibold' : 'text-loss font-semibold'}>{formatCurrency(monthSummary.pnl)}</span></span>
+            <span className="text-text-muted">P/L <span className={monthSummary.pnl >= 0 ? 'text-profit font-semibold' : 'text-loss font-semibold'}>{formatValue(monthSummary.pnl, displayMode === 'rr' ? 'money' : displayMode, { startingCapital })}</span></span>
             <span className="text-text-muted">PCT <span className={monthSummary.pct >= 0 ? 'text-profit font-semibold' : 'text-loss font-semibold'}>{monthSummary.pct >= 0 ? '+' : ''}{monthSummary.pct.toFixed(2)}%</span></span>
           </div>
         </div>
@@ -140,11 +141,13 @@ export default function CalendarTab({ trades, balance }: CalendarTabProps) {
                       {data && (
                         <>
                           <div className={`text-xs font-semibold font-mono ${data.pnl > 0 ? 'text-profit' : 'text-loss'}`}>
-                            {data.pnl > 0 ? '+' : ''}{formatCurrency(data.pnl)}
+                            {formatValue(data.pnl, displayMode === 'rr' ? 'money' : displayMode, { startingCapital })}
                           </div>
-                          <div className={`text-[10px] font-mono ${pct > 0 ? 'text-profit' : 'text-loss'}`}>
-                            {pct > 0 ? '+' : ''}{pct.toFixed(2)}%
-                          </div>
+                          {displayMode !== 'percent' && (
+                            <div className={`text-[10px] font-mono ${pct > 0 ? 'text-profit' : 'text-loss'}`}>
+                              {pct > 0 ? '+' : ''}{pct.toFixed(2)}%
+                            </div>
+                          )}
                         </>
                       )}
                     </td>
@@ -156,11 +159,13 @@ export default function CalendarTab({ trades, balance }: CalendarTabProps) {
                   {weeklyTotals[wi].pnl !== 0 && (
                     <>
                       <div className={`text-xs font-semibold font-mono ${weeklyTotals[wi].pnl > 0 ? 'text-profit' : 'text-loss'}`}>
-                        {weeklyTotals[wi].pnl > 0 ? '+' : ''}{formatCurrency(weeklyTotals[wi].pnl)}
+                        {formatValue(weeklyTotals[wi].pnl, displayMode === 'rr' ? 'money' : displayMode, { startingCapital })}
                       </div>
-                      <div className={`text-[10px] font-mono ${weeklyTotals[wi].pct > 0 ? 'text-profit' : 'text-loss'}`}>
-                        {weeklyTotals[wi].pct > 0 ? '+' : ''}{weeklyTotals[wi].pct.toFixed(2)}%
-                      </div>
+                      {displayMode !== 'percent' && (
+                        <div className={`text-[10px] font-mono ${weeklyTotals[wi].pct > 0 ? 'text-profit' : 'text-loss'}`}>
+                          {weeklyTotals[wi].pct > 0 ? '+' : ''}{weeklyTotals[wi].pct.toFixed(2)}%
+                        </div>
+                      )}
                     </>
                   )}
                 </td>

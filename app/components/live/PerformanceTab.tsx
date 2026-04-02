@@ -1,11 +1,12 @@
 'use client';
 
 import { useMemo } from 'react';
-import { LiveTrade } from '../../lib/live-types';
-import { groupByMonth, MonthlyPnl } from '../../lib/trade-stats';
+import { LiveTrade, DisplayMode } from '../../lib/live-types';
+import { groupByMonth, MonthlyPnl, formatValue } from '../../lib/trade-stats';
 
 interface PerformanceTabProps {
   trades: LiveTrade[];
+  displayMode: DisplayMode;
 }
 
 function formatCurrency(value: number): string {
@@ -17,7 +18,7 @@ function formatCurrency(value: number): string {
 
 const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-export default function PerformanceTab({ trades }: PerformanceTabProps) {
+export default function PerformanceTab({ trades, displayMode }: PerformanceTabProps) {
   const monthly = useMemo(() => groupByMonth(trades), [trades]);
 
   const grid = useMemo(() => {
@@ -63,7 +64,7 @@ export default function PerformanceTab({ trades }: PerformanceTabProps) {
                   <td key={i} className="px-1.5 py-2.5 text-center">
                     {m ? (
                       <span className={`text-xs font-mono font-medium ${m.pnl >= 0 ? 'text-accent' : 'text-loss'}`}>
-                        {m.pnl >= 0 ? '+' : ''}{formatCurrency(m.pnl)}
+                        {formatValue(m.pnl, displayMode === 'rr' ? 'money' : displayMode)}
                       </span>
                     ) : (
                       <span className="text-xs text-text-muted">—</span>
@@ -72,7 +73,7 @@ export default function PerformanceTab({ trades }: PerformanceTabProps) {
                 ))}
                 <td className="px-3 py-2.5 text-center">
                   <span className={`text-xs font-mono font-semibold ${total >= 0 ? 'text-accent' : 'text-loss'}`}>
-                    {total >= 0 ? '+' : ''}{formatCurrency(total)}
+                    {formatValue(total, displayMode === 'rr' ? 'money' : displayMode)}
                   </span>
                 </td>
               </tr>

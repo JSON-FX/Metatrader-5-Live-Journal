@@ -2,14 +2,15 @@
 
 import { useMemo } from 'react';
 import { format, parseISO } from 'date-fns';
-import { LiveTrade } from '../../lib/live-types';
-import { calculateStats, calculateEquityCurve } from '../../lib/trade-stats';
+import { LiveTrade, DisplayMode } from '../../lib/live-types';
+import { calculateStats, calculateEquityCurve, formatValue } from '../../lib/trade-stats';
 import StatCard from '../shared/StatCard';
 import EquityChart from '../shared/EquityChart';
 
 interface OverviewTabProps {
   trades: LiveTrade[];
   balance: number;
+  displayMode: DisplayMode;
 }
 
 function formatCurrency(value: number): string {
@@ -19,7 +20,7 @@ function formatCurrency(value: number): string {
   }).format(value);
 }
 
-export default function OverviewTab({ trades, balance }: OverviewTabProps) {
+export default function OverviewTab({ trades, balance, displayMode }: OverviewTabProps) {
   const startingCapital = useMemo(() => {
     const totalPnl = trades.reduce((sum, t) => sum + t.profit + t.commission + t.swap, 0);
     return balance - totalPnl;
@@ -41,6 +42,7 @@ export default function OverviewTab({ trades, balance }: OverviewTabProps) {
     );
   }
 
+  const fmt = (pnl: number) => formatValue(pnl, displayMode, { startingCapital });
   const pfDisplay = stats.profitFactor === Infinity ? '∞' : stats.profitFactor.toFixed(2);
   const netVariant = stats.netProfit >= 0 ? 'profit' : 'loss';
 
@@ -48,28 +50,28 @@ export default function OverviewTab({ trades, balance }: OverviewTabProps) {
     <div className="space-y-6 pt-6">
       {/* Row 1: Primary stats */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-        <StatCard label="Net Profit" value={formatCurrency(stats.netProfit)} variant={netVariant} />
+        <StatCard label="Net Profit" value={fmt(stats.netProfit)} variant={netVariant} />
         <StatCard label="Profit Factor" value={pfDisplay} />
         <StatCard label="Total Trades" value={String(stats.totalTrades)} />
         <StatCard label="Win Rate" value={`${stats.winRate.toFixed(1)}%`} />
-        <StatCard label="Expected Payoff" value={formatCurrency(stats.expectedPayoff)} variant={stats.expectedPayoff >= 0 ? 'profit' : 'loss'} />
+        <StatCard label="Expected Payoff" value={fmt(stats.expectedPayoff)} variant={stats.expectedPayoff >= 0 ? 'profit' : 'loss'} />
       </div>
 
       {/* Row 2: Secondary stats */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-        <StatCard label="Gross Profit" value={formatCurrency(stats.grossProfit)} variant="profit" />
-        <StatCard label="Gross Loss" value={formatCurrency(-stats.grossLoss)} variant="loss" />
+        <StatCard label="Gross Profit" value={fmt(stats.grossProfit)} variant="profit" />
+        <StatCard label="Gross Loss" value={fmt(-stats.grossLoss)} variant="loss" />
         <StatCard
           label="Max Drawdown"
-          value={formatCurrency(-stats.maxDrawdown)}
+          value={fmt(-stats.maxDrawdown)}
           secondaryValue={`${stats.maxDrawdownPct.toFixed(2)}%`}
           variant="loss"
         />
         <StatCard label="Commission + Swap" value={formatCurrency(stats.totalCommissionSwap)} />
         <StatCard
           label="Best / Worst"
-          value={formatCurrency(stats.bestTrade)}
-          secondaryValue={formatCurrency(stats.worstTrade)}
+          value={fmt(stats.bestTrade)}
+          secondaryValue={fmt(stats.worstTrade)}
         />
       </div>
 

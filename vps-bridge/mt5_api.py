@@ -315,6 +315,19 @@ def get_history():
             return error_response("Failed to retrieve history")
         return jsonify([])
 
+    # ── Fetch historical orders to get SL/TP ──────────────────────────────
+    orders = mt5.history_orders_get(from_date, to_date)
+    order_sl_tp: dict = {}  # position_id -> { sl, tp }
+    if orders:
+        for order in orders:
+            o = order._asdict()
+            pos_id = o.get("position_id", 0)
+            sl = o.get("sl", 0)
+            tp = o.get("tp", 0)
+            # Keep the first order's SL/TP (the entry order)
+            if pos_id and pos_id not in order_sl_tp and (sl or tp):
+                order_sl_tp[pos_id] = {"sl": sl, "tp": tp}
+
     # ── Pair in/out deals by position_id ────────────────────────────────────
     # deal.entry: 0=in, 1=out, 2=in/out (reverse)
     # deal.type:  0=buy, 1=sell (direction of the entry deal)
@@ -339,6 +352,7 @@ def get_history():
         elif entry == ENTRY_OUT:
             open_d = entries.pop(pos_id, None)
             trade_type = "buy" if (open_d or d).get("type", 1) == 0 else "sell"
+            sl_tp = order_sl_tp.get(pos_id, {})
             trades.append({
                 "ticket":      pos_id,
                 "symbol":      d.get("symbol", ""),
@@ -346,6 +360,8 @@ def get_history():
                 "volume":      round(d.get("volume", 0), 2),
                 "open_price":  round(open_d.get("price", 0) if open_d else 0, 5),
                 "close_price": round(d.get("price", 0), 5),
+                "sl":          sl_tp.get("sl") or None,
+                "tp":          sl_tp.get("tp") or None,
                 "open_time":   datetime.fromtimestamp(
                                    open_d.get("time", 0) if open_d else d.get("time", 0),
                                    tz=timezone.utc

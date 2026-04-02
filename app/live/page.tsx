@@ -5,10 +5,12 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Settings } from 'lucide-react';
 import { useLiveData } from '../hooks/useLiveData';
+import { DisplayMode } from '../lib/live-types';
 import LiveAccountPanel from '../components/live/LiveAccountPanel';
 import OpenPositionsTable from '../components/live/OpenPositionsTable';
 import AccountSelector from '../components/live/AccountSelector';
 import LiveTabs, { TabId } from '../components/live/LiveTabs';
+import DisplayModeToggle from '../components/live/DisplayModeToggle';
 import OverviewTab from '../components/live/OverviewTab';
 import TradesTab from '../components/live/TradesTab';
 import CalendarTab from '../components/live/CalendarTab';
@@ -29,6 +31,7 @@ function LivePageContent() {
   const [accountId, setAccountId] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
   const [activeTab, setActiveTab] = useState<TabId>(getInitialTab);
+  const [displayMode, setDisplayMode] = useState<DisplayMode>('money');
 
   useEffect(() => {
     async function resolveAccount() {
@@ -106,19 +109,22 @@ function LivePageContent() {
         <OpenPositionsTable positions={liveData.positions} />
       )}
 
-      <LiveTabs activeTab={activeTab} onTabChange={handleTabChange} />
+      <div className="flex items-center justify-between">
+        <LiveTabs activeTab={activeTab} onTabChange={handleTabChange} />
+        <DisplayModeToggle mode={displayMode} onChange={setDisplayMode} />
+      </div>
 
       {activeTab === 'overview' && liveData.account && (
-        <OverviewTab trades={liveData.history} balance={liveData.account.balance} />
+        <OverviewTab trades={liveData.history} balance={liveData.account.balance} displayMode={displayMode} />
       )}
       {activeTab === 'trades' && liveData.account && (
-        <TradesTab trades={liveData.history} balance={liveData.account.balance} />
+        <TradesTab trades={liveData.history} balance={liveData.account.balance} displayMode={displayMode} />
       )}
       {activeTab === 'calendar' && liveData.account && (
-        <CalendarTab trades={liveData.history} balance={liveData.account.balance} />
+        <CalendarTab trades={liveData.history} balance={liveData.account.balance} displayMode={displayMode} />
       )}
       {activeTab === 'performance' && (
-        <PerformanceTab trades={liveData.history} />
+        <PerformanceTab trades={liveData.history} displayMode={displayMode} />
       )}
 
       {!liveData.account && liveData.history.length === 0 && activeTab !== 'overview' && (
