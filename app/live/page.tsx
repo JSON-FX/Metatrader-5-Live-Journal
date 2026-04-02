@@ -123,8 +123,8 @@ function LivePageContent() {
       {activeTab === 'calendar' && liveData.account && (
         <CalendarTab trades={liveData.history} balance={liveData.account.balance} displayMode={displayMode} />
       )}
-      {activeTab === 'performance' && (
-        <PerformanceTab trades={liveData.history} displayMode={displayMode} />
+      {activeTab === 'performance' && liveData.account && (
+        <PerformanceTab trades={liveData.history} balance={liveData.account.balance} displayMode={displayMode} />
       )}
 
       {!liveData.account && liveData.history.length === 0 && activeTab !== 'overview' && (

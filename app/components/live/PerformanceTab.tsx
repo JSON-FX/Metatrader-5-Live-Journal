@@ -6,19 +6,18 @@ import { groupByMonth, MonthlyPnl, formatValue } from '../../lib/trade-stats';
 
 interface PerformanceTabProps {
   trades: LiveTrade[];
+  balance: number;
   displayMode: DisplayMode;
-}
-
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency', currency: 'USD',
-    minimumFractionDigits: 0, maximumFractionDigits: 0,
-  }).format(value);
 }
 
 const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-export default function PerformanceTab({ trades, displayMode }: PerformanceTabProps) {
+export default function PerformanceTab({ trades, balance, displayMode }: PerformanceTabProps) {
+  const startingCapital = useMemo(() => {
+    const totalPnl = trades.reduce((sum, t) => sum + t.profit + t.commission + t.swap, 0);
+    return balance - totalPnl;
+  }, [trades, balance]);
+
   const monthly = useMemo(() => groupByMonth(trades), [trades]);
 
   const grid = useMemo(() => {
@@ -64,7 +63,7 @@ export default function PerformanceTab({ trades, displayMode }: PerformanceTabPr
                   <td key={i} className="px-1.5 py-2.5 text-center">
                     {m ? (
                       <span className={`text-xs font-mono font-medium ${m.pnl >= 0 ? 'text-accent' : 'text-loss'}`}>
-                        {formatValue(m.pnl, displayMode)}
+                        {formatValue(m.pnl, displayMode, { startingCapital })}
                       </span>
                     ) : (
                       <span className="text-xs text-text-muted">—</span>
@@ -73,7 +72,7 @@ export default function PerformanceTab({ trades, displayMode }: PerformanceTabPr
                 ))}
                 <td className="px-3 py-2.5 text-center">
                   <span className={`text-xs font-mono font-semibold ${total >= 0 ? 'text-accent' : 'text-loss'}`}>
-                    {formatValue(total, displayMode)}
+                    {formatValue(total, displayMode, { startingCapital })}
                   </span>
                 </td>
               </tr>
