@@ -3,11 +3,14 @@
 import { useState, useMemo } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { MT5Report } from '../../lib/types';
+import { DisplayMode } from '../../lib/live-types';
+import { formatValue } from '../../lib/trade-stats';
 import StatCard from '../shared/StatCard';
 import EquityChart from '../shared/EquityChart';
 
 interface ReportOverviewProps {
   report: MT5Report;
+  displayMode: DisplayMode;
 }
 
 function formatCurrency(value: number): string {
@@ -19,11 +22,12 @@ function formatCurrency(value: number): string {
   }).format(value);
 }
 
-export default function ReportOverview({ report }: ReportOverviewProps) {
+export default function ReportOverview({ report, displayMode }: ReportOverviewProps) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const { results, tradeStats, settings } = report;
 
   const netProfitPercent = (results.totalNetProfit / settings.initialDeposit) * 100;
+  const fmt = (val: number) => formatValue(val, displayMode, { startingCapital: settings.initialDeposit });
 
   const highestDrawdownPercent = Math.max(
     results.balanceDrawdownMaximalPercent,
@@ -59,7 +63,7 @@ export default function ReportOverview({ report }: ReportOverviewProps) {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard
           label="Net Profit"
-          value={formatCurrency(results.totalNetProfit)}
+          value={fmt(results.totalNetProfit)}
           secondaryValue={`${netProfitPercent >= 0 ? '+' : ''}${netProfitPercent.toFixed(2)}%`}
           variant={results.totalNetProfit >= 0 ? 'profit' : 'loss'}
         />
@@ -85,7 +89,7 @@ export default function ReportOverview({ report }: ReportOverviewProps) {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard
           label="Expected Payoff"
-          value={formatCurrency(results.expectedPayoff)}
+          value={fmt(results.expectedPayoff)}
           secondaryValue="Per trade"
           variant={results.expectedPayoff >= 0 ? 'profit' : 'loss'}
         />
@@ -112,22 +116,22 @@ export default function ReportOverview({ report }: ReportOverviewProps) {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard
           label="Gross Profit"
-          value={formatCurrency(results.grossProfit)}
+          value={fmt(results.grossProfit)}
           variant="profit"
         />
         <StatCard
           label="Gross Loss"
-          value={formatCurrency(results.grossLoss)}
+          value={fmt(results.grossLoss)}
           variant="loss"
         />
         <StatCard
           label="Avg Win"
-          value={formatCurrency(tradeStats.averageProfitTrade)}
+          value={fmt(tradeStats.averageProfitTrade)}
           variant="profit"
         />
         <StatCard
           label="Avg Loss"
-          value={formatCurrency(tradeStats.averageLossTrade)}
+          value={fmt(tradeStats.averageLossTrade)}
           variant="loss"
         />
       </div>
