@@ -1,12 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-const MT5_ENDPOINT = process.env.MT5_API_ENDPOINT ?? 'http://localhost:5555';
+import { resolveEndpoint } from '../../../lib/accounts';
 
 export async function GET(req: NextRequest) {
+  const accountId = req.nextUrl.searchParams.get('accountId');
   const days = req.nextUrl.searchParams.get('days') ?? '90';
+  const resolved = await resolveEndpoint(accountId);
+
+  if ('error' in resolved) {
+    return NextResponse.json({ error: resolved.error }, { status: 404 });
+  }
+
   try {
-    const res = await fetch(`${MT5_ENDPOINT}/history?days=${days}`, {
-      signal: AbortSignal.timeout(15000), // history can be slow on large accounts
+    const res = await fetch(`${resolved.endpoint}/history?days=${days}`, {
+      signal: AbortSignal.timeout(15000),
     });
     if (!res.ok) {
       return NextResponse.json({ error: 'MT5 history unavailable' }, { status: res.status });

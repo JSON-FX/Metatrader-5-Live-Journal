@@ -1,10 +1,16 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { resolveEndpoint } from '../../../lib/accounts';
 
-const MT5_ENDPOINT = process.env.MT5_API_ENDPOINT ?? 'http://localhost:5555';
+export async function GET(req: NextRequest) {
+  const accountId = req.nextUrl.searchParams.get('accountId');
+  const resolved = await resolveEndpoint(accountId);
 
-export async function GET() {
+  if ('error' in resolved) {
+    return NextResponse.json({ error: resolved.error }, { status: 404 });
+  }
+
   try {
-    const res = await fetch(`${MT5_ENDPOINT}/positions`, {
+    const res = await fetch(`${resolved.endpoint}/positions`, {
       signal: AbortSignal.timeout(5000),
     });
     if (!res.ok) {
