@@ -12,9 +12,6 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# MT5 bridge endpoint — overridable at runtime via env
-ENV MT5_API_ENDPOINT=http://host.docker.internal:5555
-
 RUN npm run build
 
 # ─── Production ──────────────────────────────────
@@ -23,7 +20,6 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV HOSTNAME=0.0.0.0
 ENV PORT=3000
-ENV MT5_API_ENDPOINT=http://host.docker.internal:5555
 
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
@@ -31,7 +27,6 @@ RUN addgroup --system --gid 1001 nodejs && \
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-COPY accounts.example.json ./accounts.example.json
 
 USER nextjs
 EXPOSE 3000
