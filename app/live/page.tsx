@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { Settings } from 'lucide-react';
 import { useLiveData } from '../hooks/useLiveData';
 import LiveAccountPanel from '../components/live/LiveAccountPanel';
 import OpenPositionsTable from '../components/live/OpenPositionsTable';
@@ -22,29 +24,28 @@ function LivePageContent() {
     async function resolveAccount() {
       const urlAccount = searchParams.get('account');
 
-      // Fetch available accounts for validation
-      let availableIds: string[] = [];
+      let availableSlugs: string[] = [];
       try {
         const res = await fetch('/api/live/accounts');
         const data = await res.json();
-        availableIds = (data.accounts ?? []).map((a: { id: string }) => a.id);
+        availableSlugs = (data.accounts ?? []).map((a: { slug: string }) => a.slug);
       } catch {
         // If we can't fetch accounts, accept any ID
       }
 
-      if (urlAccount && (availableIds.length === 0 || availableIds.includes(urlAccount))) {
+      if (urlAccount && (availableSlugs.length === 0 || availableSlugs.includes(urlAccount))) {
         setAccountId(urlAccount);
         localStorage.setItem(LS_KEY, urlAccount);
       } else {
         const stored = localStorage.getItem(LS_KEY);
-        if (stored && (availableIds.length === 0 || availableIds.includes(stored))) {
+        if (stored && (availableSlugs.length === 0 || availableSlugs.includes(stored))) {
           setAccountId(stored);
           router.replace(`/live?account=${encodeURIComponent(stored)}`);
-        } else if (availableIds.length > 0) {
-          const firstId = availableIds[0];
-          setAccountId(firstId);
-          localStorage.setItem(LS_KEY, firstId);
-          router.replace(`/live?account=${encodeURIComponent(firstId)}`);
+        } else if (availableSlugs.length > 0) {
+          const firstSlug = availableSlugs[0];
+          setAccountId(firstSlug);
+          localStorage.setItem(LS_KEY, firstSlug);
+          router.replace(`/live?account=${encodeURIComponent(firstSlug)}`);
         }
       }
       setReady(true);
@@ -54,10 +55,10 @@ function LivePageContent() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSelectAccount = useCallback(
-    (id: string) => {
-      setAccountId(id);
-      localStorage.setItem(LS_KEY, id);
-      router.replace(`/live?account=${encodeURIComponent(id)}`);
+    (slug: string) => {
+      setAccountId(slug);
+      localStorage.setItem(LS_KEY, slug);
+      router.replace(`/live?account=${encodeURIComponent(slug)}`);
     },
     [router]
   );
@@ -68,8 +69,15 @@ function LivePageContent() {
 
   return (
     <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3">
         <AccountSelector selectedId={accountId} onSelect={handleSelectAccount} />
+        <Link
+          href="/live/settings"
+          className="p-1.5 rounded-lg text-text-muted hover:text-text-primary hover:bg-bg-tertiary transition-colors"
+          title="Account Settings"
+        >
+          <Settings className="w-4.5 h-4.5" />
+        </Link>
       </div>
 
       <LiveAccountPanel
