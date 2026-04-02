@@ -1,35 +1,85 @@
-import { readFile } from 'fs/promises';
-import { join } from 'path';
-import { AccountConfig, AccountsFile } from './live-types';
-
-const ACCOUNTS_PATH = join(process.cwd(), 'accounts.json');
+import { getDb } from './db';
+import { AccountConfig } from './live-types';
+import { RowDataPacket } from 'mysql2';
 
 export async function loadAccounts(): Promise<AccountConfig[]> {
   try {
-    const raw = await readFile(ACCOUNTS_PATH, 'utf-8');
-    const parsed: AccountsFile = JSON.parse(raw);
-    if (Array.isArray(parsed.accounts) && parsed.accounts.length > 0) {
-      return parsed.accounts;
-    }
+    const db = await getDb();
+    const [rows] = await db.execute<RowDataPacket[]>(
+      'SELECT id, slug, name, type, endpoint, sort_order FROM mt5_accounts ORDER BY sort_order ASC, id ASC'
+    );
+    return rows as AccountConfig[];
   } catch {
-    // accounts.json missing or malformed — fall through to env var fallback
+    return [];
   }
-
-  const envEndpoint = process.env.MT5_API_ENDPOINT ?? 'http://localhost:5555';
-  return [{ id: 'default', name: 'MT5 Account', type: 'live', endpoint: envEndpoint }];
 }
 
-export async function resolveEndpoint(accountId: string | null): Promise<{ endpoint: string } | { error: string }> {
-  const accounts = await loadAccounts();
-
-  if (!accountId) {
+export async function resolveEndpoint(slug: string | null): Promise<{ endpoint: string } | { error: string }> {
+  if (!slug) {
+    const accounts = await loadAccounts();
+    if (accounts.length === 0) {
+      return { error: 'No accounts configured' };
+    }
     return { endpoint: accounts[0].endpoint };
   }
 
-  const account = accounts.find((a) => a.id === accountId);
-  if (!account) {
-    return { error: `Account "${accountId}" not found` };
+  try {
+    const db = await getDb();
+    const [rows] = await db.execute<RowDataPacket[]>(
+      'SELECT endpoint FROM mt5_accounts WHERE slug = ?',
+      [slug]
+    );
+    if (rows.length === 0) {
+      return { error: `Account "${slug}" not found` };
+    }
+    return { endpoint: (rows[0] as { endpoint: string }).endpoint };
+  } catch {
+    return { error: 'Database connection failed' };
   }
+}
 
-  return { endpoint: account.endpoint };
+export async function getAccountById(id: number): Promise<AccountConfig | null> {
+  try {
+    const db = await getDb();
+    const [rows] = await db.execute<RowDataPacket[]>(
+      'SELECT id, slug, name, type, endpoint, sort_order FROM mt5_accounts WHERE id = ?',
+      [id]
+    );
+    return rows.length > 0 ? (rows[0] as AccountConfig) : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function createAccount(data: { slug: string; name: string; type: string; endpoint: string }): Promise<AccountConfig> {
+  const db = await getDb();
+  const [result] = await db.execute(
+    'INSERT INTO mt5_accounts (slug, name, type, endpoint) VALUES (?, ?, ?, ?)',
+    [data.slug, data.name, data.type, data.endpoint]
+  );
+  const insertId = (result as { insertId: number }).insertId;
+  return (await getAccountById(insertId))!;
+}
+
+export async function updateAccount(id: number, data: { slug?: string; name?: string; type?: string; endpoint?: string }): Promise<AccountConfig | null> {
+  const fields: string[] = [];
+  const values: (string | number)[] = [];
+
+  if (data.slug !== undefined) { fields.push('slug = ?'); values.push(data.slug); }
+  if (data.name !== undefined) { fields.push('name = ?'); values.push(data.name); }
+  if (data.type !== undefined) { fields.push('type = ?'); values.push(data.type); }
+  if (data.endpoint !== undefined) { fields.push('endpoint = ?'); values.push(data.endpoint); }
+
+  if (fields.length === 0) return getAccountById(id);
+
+  values.push(id);
+  const db = await getDb();
+  await db.execute(`UPDATE mt5_accounts SET ${fields.join(', ')} WHERE id = ?`, values);
+  return getAccountById(id);
+}
+
+export async function deleteAccount(id: number): Promise<boolean> {
+  const db = await getDb();
+  const [result] = await db.execute('DELETE FROM mt5_accounts WHERE id = ?', [id]);
+  return (result as { affectedRows: number }).affectedRows > 0;
 }
