@@ -29,11 +29,15 @@ export interface MonthlyPnl {
   trades: number;
 }
 
-export interface WinStreaks {
-  currentDays: number;
-  maxDays: number;
-  currentTrades: number;
-  maxTrades: number;
+export interface StreakData {
+  winStreak: number;
+  maxWinStreak: number;
+  loseStreak: number;
+  maxLoseStreak: number;
+  winStreakTrades: number;
+  maxWinStreakTrades: number;
+  loseStreakTrades: number;
+  maxLoseStreakTrades: number;
 }
 
 export function calculateStats(trades: LiveTrade[], startingCapital: number): TradeStats {
@@ -156,48 +160,64 @@ export function groupByMonth(trades: LiveTrade[]): MonthlyPnl[] {
   return Array.from(map.values()).sort((a, b) => a.year !== b.year ? a.year - b.year : a.month - b.month);
 }
 
-export function calculateWinStreaks(trades: LiveTrade[]): WinStreaks {
+export function calculateStreaks(trades: LiveTrade[]): StreakData {
   const daily = groupByDay(trades);
-
-  // Current day streak (from end)
-  let currentDays = 0;
-  for (let i = daily.length - 1; i >= 0; i--) {
-    if (daily[i].pnl > 0) currentDays++;
-    else break;
-  }
-
-  // Max day streak
-  let streak = 0;
-  let bestDayStreak = 0;
-  for (const d of daily) {
-    if (d.pnl > 0) { streak++; if (streak > bestDayStreak) bestDayStreak = streak; }
-    else { streak = 0; }
-  }
-
-  // Trade streaks
   const sorted = [...trades].sort((a, b) => a.close_time.localeCompare(b.close_time));
 
-  let tradeStreak = 0;
-  let bestTradeStreak = 0;
-  for (const t of sorted) {
-    const net = t.profit + t.commission + t.swap;
-    if (net > 0) { tradeStreak++; if (tradeStreak > bestTradeStreak) bestTradeStreak = tradeStreak; }
-    else { tradeStreak = 0; }
+  // Day streaks (win + lose)
+  let winDayStreak = 0, maxWinDayStreak = 0;
+  let loseDayStreak = 0, maxLoseDayStreak = 0;
+  for (const d of daily) {
+    if (d.pnl > 0) {
+      winDayStreak++; loseDayStreak = 0;
+      if (winDayStreak > maxWinDayStreak) maxWinDayStreak = winDayStreak;
+    } else if (d.pnl < 0) {
+      loseDayStreak++; winDayStreak = 0;
+      if (loseDayStreak > maxLoseDayStreak) maxLoseDayStreak = loseDayStreak;
+    } else {
+      winDayStreak = 0; loseDayStreak = 0;
+    }
   }
 
-  // Current trade streak (from end)
-  let currentTrades = 0;
+  // Current day streaks (from end)
+  let currentWinDays = 0, currentLoseDays = 0;
+  for (let i = daily.length - 1; i >= 0; i--) {
+    if (daily[i].pnl > 0) { if (currentLoseDays > 0) break; currentWinDays++; }
+    else if (daily[i].pnl < 0) { if (currentWinDays > 0) break; currentLoseDays++; }
+    else break;
+  }
+
+  // Trade streaks (win + lose)
+  let winTradeStreak = 0, maxWinTradeStreak = 0;
+  let loseTradeStreak = 0, maxLoseTradeStreak = 0;
+  for (const t of sorted) {
+    const net = t.profit + t.commission + t.swap;
+    if (net > 0) {
+      winTradeStreak++; loseTradeStreak = 0;
+      if (winTradeStreak > maxWinTradeStreak) maxWinTradeStreak = winTradeStreak;
+    } else {
+      loseTradeStreak++; winTradeStreak = 0;
+      if (loseTradeStreak > maxLoseTradeStreak) maxLoseTradeStreak = loseTradeStreak;
+    }
+  }
+
+  // Current trade streaks (from end)
+  let currentWinTrades = 0, currentLoseTrades = 0;
   for (let i = sorted.length - 1; i >= 0; i--) {
     const net = sorted[i].profit + sorted[i].commission + sorted[i].swap;
-    if (net > 0) currentTrades++;
-    else break;
+    if (net > 0) { if (currentLoseTrades > 0) break; currentWinTrades++; }
+    else { if (currentWinTrades > 0) break; currentLoseTrades++; }
   }
 
   return {
-    currentDays,
-    maxDays: bestDayStreak,
-    currentTrades,
-    maxTrades: bestTradeStreak,
+    winStreak: currentWinDays,
+    maxWinStreak: maxWinDayStreak,
+    loseStreak: currentLoseDays,
+    maxLoseStreak: maxLoseDayStreak,
+    winStreakTrades: currentWinTrades,
+    maxWinStreakTrades: maxWinTradeStreak,
+    loseStreakTrades: currentLoseTrades,
+    maxLoseStreakTrades: maxLoseTradeStreak,
   };
 }
 

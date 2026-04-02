@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import { ChevronLeft, ChevronRight, Flame } from 'lucide-react';
 import { LiveTrade, DisplayMode } from '../../lib/live-types';
-import { groupByDay, calculateWinStreaks, DailyPnl, formatValue } from '../../lib/trade-stats';
+import { groupByDay, calculateStreaks, DailyPnl, formatValue } from '../../lib/trade-stats';
 
 interface CalendarTabProps {
   trades: LiveTrade[];
@@ -27,7 +27,14 @@ export default function CalendarTab({ trades, balance, displayMode }: CalendarTa
   const [month, setMonth] = useState(now.getMonth());
 
   const dailyData = useMemo(() => groupByDay(trades), [trades]);
-  const streaks = useMemo(() => calculateWinStreaks(trades), [trades]);
+  // Filter trades for selected month and calculate streaks
+  const monthTrades = useMemo(() => {
+    const prefix = `${year}-${String(month + 1).padStart(2, '0')}`;
+    return trades.filter(t => t.close_time.startsWith(prefix));
+  }, [trades, year, month]);
+
+  const monthStreaks = useMemo(() => calculateStreaks(monthTrades), [monthTrades]);
+  const allTimeStreaks = useMemo(() => calculateStreaks(trades), [trades]);
 
   const startingCapital = useMemo(() => {
     const totalPnl = trades.reduce((sum, t) => sum + t.profit + t.commission + t.swap, 0);
@@ -175,25 +182,73 @@ export default function CalendarTab({ trades, balance, displayMode }: CalendarTa
         </table>
       </div>
 
-      {/* Win Streaks */}
-      <div className="bg-bg-secondary border border-border rounded-xl p-6">
-        <h3 className="text-sm font-semibold text-text-primary uppercase tracking-[0.5px] mb-4">Win Streaks</h3>
-        <div className="grid grid-cols-2 gap-6">
-          <div className="text-center">
-            <p className="text-[10px] text-text-muted uppercase tracking-wider mb-2">Days</p>
-            <div className="flex items-center justify-center gap-2">
-              <span className="text-3xl font-bold text-text-primary">{streaks.currentDays}</span>
-              <Flame className="w-5 h-5 text-warning" />
+      {/* Streaks */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {/* Month Streaks */}
+        <div className="bg-bg-secondary border border-border rounded-xl p-5">
+          <h3 className="text-sm font-semibold text-text-primary uppercase tracking-[0.5px] mb-4">
+            {MONTH_NAMES[month]} Streaks
+          </h3>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="text-center">
+              <p className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Win Days</p>
+              <div className="flex items-center justify-center gap-1.5">
+                <span className="text-2xl font-bold text-profit">{monthStreaks.winStreak}</span>
+                <Flame className="w-4 h-4 text-warning" />
+              </div>
+              <p className="text-[10px] text-text-muted mt-0.5">Max <span className="text-text-primary font-semibold">{monthStreaks.maxWinStreak}</span></p>
             </div>
-            <p className="text-xs text-text-muted mt-1">Max <span className="text-text-primary font-semibold">{streaks.maxDays}</span></p>
+            <div className="text-center">
+              <p className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Lose Days</p>
+              <span className="text-2xl font-bold text-loss">{monthStreaks.loseStreak}</span>
+              <p className="text-[10px] text-text-muted mt-0.5">Max <span className="text-text-primary font-semibold">{monthStreaks.maxLoseStreak}</span></p>
+            </div>
+            <div className="text-center">
+              <p className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Win Trades</p>
+              <div className="flex items-center justify-center gap-1.5">
+                <span className="text-2xl font-bold text-profit">{monthStreaks.winStreakTrades}</span>
+                <Flame className="w-4 h-4 text-warning" />
+              </div>
+              <p className="text-[10px] text-text-muted mt-0.5">Max <span className="text-text-primary font-semibold">{monthStreaks.maxWinStreakTrades}</span></p>
+            </div>
+            <div className="text-center">
+              <p className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Lose Trades</p>
+              <span className="text-2xl font-bold text-loss">{monthStreaks.loseStreakTrades}</span>
+              <p className="text-[10px] text-text-muted mt-0.5">Max <span className="text-text-primary font-semibold">{monthStreaks.maxLoseStreakTrades}</span></p>
+            </div>
           </div>
-          <div className="text-center">
-            <p className="text-[10px] text-text-muted uppercase tracking-wider mb-2">Trades</p>
-            <div className="flex items-center justify-center gap-2">
-              <span className="text-3xl font-bold text-text-primary">{streaks.currentTrades}</span>
-              <Flame className="w-5 h-5 text-warning" />
+        </div>
+
+        {/* All-Time Streaks */}
+        <div className="bg-bg-secondary border border-border rounded-xl p-5">
+          <h3 className="text-sm font-semibold text-text-primary uppercase tracking-[0.5px] mb-4">All-Time Streaks</h3>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="text-center">
+              <p className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Win Days</p>
+              <div className="flex items-center justify-center gap-1.5">
+                <span className="text-2xl font-bold text-profit">{allTimeStreaks.winStreak}</span>
+                <Flame className="w-4 h-4 text-warning" />
+              </div>
+              <p className="text-[10px] text-text-muted mt-0.5">Max <span className="text-text-primary font-semibold">{allTimeStreaks.maxWinStreak}</span></p>
             </div>
-            <p className="text-xs text-text-muted mt-1">Max <span className="text-text-primary font-semibold">{streaks.maxTrades}</span></p>
+            <div className="text-center">
+              <p className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Lose Days</p>
+              <span className="text-2xl font-bold text-loss">{allTimeStreaks.loseStreak}</span>
+              <p className="text-[10px] text-text-muted mt-0.5">Max <span className="text-text-primary font-semibold">{allTimeStreaks.maxLoseStreak}</span></p>
+            </div>
+            <div className="text-center">
+              <p className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Win Trades</p>
+              <div className="flex items-center justify-center gap-1.5">
+                <span className="text-2xl font-bold text-profit">{allTimeStreaks.winStreakTrades}</span>
+                <Flame className="w-4 h-4 text-warning" />
+              </div>
+              <p className="text-[10px] text-text-muted mt-0.5">Max <span className="text-text-primary font-semibold">{allTimeStreaks.maxWinStreakTrades}</span></p>
+            </div>
+            <div className="text-center">
+              <p className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Lose Trades</p>
+              <span className="text-2xl font-bold text-loss">{allTimeStreaks.loseStreakTrades}</span>
+              <p className="text-[10px] text-text-muted mt-0.5">Max <span className="text-text-primary font-semibold">{allTimeStreaks.maxLoseStreakTrades}</span></p>
+            </div>
           </div>
         </div>
       </div>
