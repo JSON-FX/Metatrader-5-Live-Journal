@@ -39,8 +39,6 @@ export interface LiveTrade {
   volume: number;
   open_price: number;
   close_price: number;
-  sl: number | null;
-  tp: number | null;
   open_time: string;
   close_time: string;
   profit: number;
@@ -50,7 +48,7 @@ export interface LiveTrade {
   magic: number;
 }
 
-export type DisplayMode = 'money' | 'percent' | 'rr';
+export type DisplayMode = 'money' | 'percent';
 
 export type LiveStatus = 'connecting' | 'online' | 'offline';
 

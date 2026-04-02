@@ -10,7 +10,6 @@ interface DisplayModeToggleProps {
 const MODES: { id: DisplayMode; label: string }[] = [
   { id: 'money', label: '$' },
   { id: 'percent', label: '%' },
-  { id: 'rr', label: 'RR' },
 ];
 
 export default function DisplayModeToggle({ mode, onChange }: DisplayModeToggleProps) {

@@ -108,7 +108,7 @@ export default function CalendarTab({ trades, balance, displayMode }: CalendarTa
           <div className="flex items-center gap-4 text-xs font-mono">
             <span className="text-text-muted">Trades <span className="text-text-primary font-semibold">{monthSummary.trades}</span></span>
             <span className="text-text-muted">Wins <span className="text-text-primary font-semibold">{monthSummary.wins}</span></span>
-            <span className="text-text-muted">P/L <span className={monthSummary.pnl >= 0 ? 'text-profit font-semibold' : 'text-loss font-semibold'}>{formatValue(monthSummary.pnl, displayMode === 'rr' ? 'money' : displayMode, { startingCapital })}</span></span>
+            <span className="text-text-muted">P/L <span className={monthSummary.pnl >= 0 ? 'text-profit font-semibold' : 'text-loss font-semibold'}>{formatValue(monthSummary.pnl, displayMode, { startingCapital })}</span></span>
             <span className="text-text-muted">PCT <span className={monthSummary.pct >= 0 ? 'text-profit font-semibold' : 'text-loss font-semibold'}>{monthSummary.pct >= 0 ? '+' : ''}{monthSummary.pct.toFixed(2)}%</span></span>
           </div>
         </div>
@@ -141,7 +141,7 @@ export default function CalendarTab({ trades, balance, displayMode }: CalendarTa
                       {data && (
                         <>
                           <div className={`text-xs font-semibold font-mono ${data.pnl > 0 ? 'text-profit' : 'text-loss'}`}>
-                            {formatValue(data.pnl, displayMode === 'rr' ? 'money' : displayMode, { startingCapital })}
+                            {formatValue(data.pnl, displayMode, { startingCapital })}
                           </div>
                           {displayMode !== 'percent' && (
                             <div className={`text-[10px] font-mono ${pct > 0 ? 'text-profit' : 'text-loss'}`}>
@@ -159,7 +159,7 @@ export default function CalendarTab({ trades, balance, displayMode }: CalendarTa
                   {weeklyTotals[wi].pnl !== 0 && (
                     <>
                       <div className={`text-xs font-semibold font-mono ${weeklyTotals[wi].pnl > 0 ? 'text-profit' : 'text-loss'}`}>
-                        {formatValue(weeklyTotals[wi].pnl, displayMode === 'rr' ? 'money' : displayMode, { startingCapital })}
+                        {formatValue(weeklyTotals[wi].pnl, displayMode, { startingCapital })}
                       </div>
                       {displayMode !== 'percent' && (
                         <div className={`text-[10px] font-mono ${weeklyTotals[wi].pct > 0 ? 'text-profit' : 'text-loss'}`}>

@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import { format, parseISO } from 'date-fns';
 import { LiveTrade, DisplayMode } from '../../lib/live-types';
-import { calculateRunningBalance, formatValue, calculateRR } from '../../lib/trade-stats';
+import { calculateRunningBalance, formatValue } from '../../lib/trade-stats';
 import DataTable, { Column } from '../shared/DataTable';
 import StatusBadge from '../shared/StatusBadge';
 
@@ -84,7 +84,7 @@ export default function TradesTab({ trades, balance, displayMode }: TradesTabPro
       key: 'profit', label: 'Profit', align: 'right',
       render: (row) => {
         const net = row.trade.profit + row.trade.commission + row.trade.swap;
-        const display = formatValue(net, displayMode, { startingCapital, trade: row.trade });
+        const display = formatValue(net, displayMode, { startingCapital });
         return <span className={`font-semibold ${net >= 0 ? 'text-profit' : 'text-loss'}`}>{display}</span>;
       },
       sortable: true, sortValue: (row) => row.trade.profit + row.trade.commission + row.trade.swap,

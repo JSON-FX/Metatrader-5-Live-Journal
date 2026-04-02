@@ -64,7 +64,7 @@ export default function PerformanceTab({ trades, displayMode }: PerformanceTabPr
                   <td key={i} className="px-1.5 py-2.5 text-center">
                     {m ? (
                       <span className={`text-xs font-mono font-medium ${m.pnl >= 0 ? 'text-accent' : 'text-loss'}`}>
-                        {formatValue(m.pnl, displayMode === 'rr' ? 'money' : displayMode)}
+                        {formatValue(m.pnl, displayMode)}
                       </span>
                     ) : (
                       <span className="text-xs text-text-muted">—</span>
@@ -73,7 +73,7 @@ export default function PerformanceTab({ trades, displayMode }: PerformanceTabPr
                 ))}
                 <td className="px-3 py-2.5 text-center">
                   <span className={`text-xs font-mono font-semibold ${total >= 0 ? 'text-accent' : 'text-loss'}`}>
-                    {formatValue(total, displayMode === 'rr' ? 'money' : displayMode)}
+                    {formatValue(total, displayMode)}
                   </span>
                 </td>
               </tr>
