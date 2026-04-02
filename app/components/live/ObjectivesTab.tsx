@@ -1,7 +1,6 @@
 'use client';
 
 import { useMemo } from 'react';
-import { CheckCircle, XCircle, Clock } from 'lucide-react';
 import { LiveTrade, LiveAccountInfo, PropfirmRule, ObjectiveStatus } from '../../lib/live-types';
 import { calculateObjectives, calculateDisciplineScore } from '../../lib/objectives';
 
@@ -11,10 +10,10 @@ interface ObjectivesTabProps {
   account: LiveAccountInfo | null;
 }
 
-function StatusIcon({ status }: { status: ObjectiveStatus }) {
-  if (status === 'passing') return <CheckCircle className="w-5 h-5 text-profit" />;
-  if (status === 'failed') return <XCircle className="w-5 h-5 text-loss" />;
-  return <Clock className="w-5 h-5 text-warning" />;
+function StatusLabel({ status }: { status: ObjectiveStatus }) {
+  if (status === 'passing') return <span className="text-xs font-semibold text-profit">Passed</span>;
+  if (status === 'failed') return <span className="text-xs font-semibold text-loss">Failed</span>;
+  return <span className="text-xs font-semibold text-warning">In Progress</span>;
 }
 
 function ScoreGauge({ score }: { score: number }) {
@@ -83,7 +82,7 @@ export default function ObjectivesTab({ rule, trades, account }: ObjectivesTabPr
                   <td className="py-3 text-sm text-text-primary">{obj.name}</td>
                   <td className="py-3 text-sm text-text-secondary font-mono text-right">{obj.result}</td>
                   <td className="py-3 text-sm text-text-muted font-mono text-right">{obj.target}</td>
-                  <td className="py-3 text-center"><StatusIcon status={obj.status} /></td>
+                  <td className="py-3 text-center"><StatusLabel status={obj.status} /></td>
                 </tr>
               ))}
             </tbody>

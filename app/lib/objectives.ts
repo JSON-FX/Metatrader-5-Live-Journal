@@ -5,8 +5,11 @@ function resolveLimit(value: number, type: 'money' | 'percent', accountSize: num
 }
 
 function formatLimit(value: number, type: 'money' | 'percent'): string {
-  if (type === 'percent') return `${value}%`;
-  return `$${value.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+  if (type === 'percent') {
+    const str = value % 1 === 0 ? value.toString() : value.toFixed(1);
+    return `${str}%`;
+  }
+  return `$${value.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 }
 
 function formatMoney(value: number): string {
