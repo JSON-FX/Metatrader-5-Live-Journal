@@ -13,9 +13,10 @@ type TabKey = typeof TABS[number]['key'];
 
 interface ReportTabsProps {
   children: Record<TabKey, React.ReactNode>;
+  rightSlot?: React.ReactNode;
 }
 
-export default function ReportTabs({ children }: ReportTabsProps) {
+export default function ReportTabs({ children, rightSlot }: ReportTabsProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -29,20 +30,23 @@ export default function ReportTabs({ children }: ReportTabsProps) {
 
   return (
     <div>
-      <div className="flex border-b border-border mb-6">
-        {TABS.map(tab => (
-          <button
-            key={tab.key}
-            onClick={() => setTab(tab.key)}
-            className={`px-4 py-2.5 text-xs font-medium uppercase tracking-[1px] transition-colors border-b-2 -mb-[1px] ${
-              activeTab === tab.key
-                ? 'border-accent text-accent'
-                : 'border-transparent text-text-muted hover:text-text-primary'
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
+      <div className="flex items-center justify-between border-b border-border mb-6">
+        <div className="flex">
+          {TABS.map(tab => (
+            <button
+              key={tab.key}
+              onClick={() => setTab(tab.key)}
+              className={`px-4 py-2.5 text-xs font-medium uppercase tracking-[1px] transition-colors border-b-2 -mb-[1px] ${
+                activeTab === tab.key
+                  ? 'border-accent text-accent'
+                  : 'border-transparent text-text-muted hover:text-text-primary'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+        {rightSlot && <div className="pb-1">{rightSlot}</div>}
       </div>
       {children[activeTab]}
     </div>

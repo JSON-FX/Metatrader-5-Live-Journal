@@ -4,12 +4,14 @@ import { use, useState, useEffect, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import { loadReports } from '../../lib/storage';
 import { MT5Report } from '../../lib/types';
+import { DisplayMode } from '../../lib/live-types';
 import Header from '../../components/shared/Header';
 import ReportTabs from '../../components/backtest/ReportTabs';
 import ReportOverview from '../../components/backtest/ReportOverview';
 import ReportTrades from '../../components/backtest/ReportTrades';
 import ReportCalendar from '../../components/backtest/ReportCalendar';
 import ReportPerformance from '../../components/backtest/ReportPerformance';
+import DisplayModeToggle from '../../components/shared/DisplayModeToggle';
 
 function getSymbol(report: MT5Report): string {
   return report.settings.symbol.replace('_tickstory', '').toUpperCase();
@@ -18,6 +20,7 @@ function getSymbol(report: MT5Report): string {
 function ReportContent({ id }: { id: string }) {
   const router = useRouter();
   const [report, setReport] = useState<MT5Report | null>(null);
+  const [displayMode, setDisplayMode] = useState<DisplayMode>('money');
 
   useEffect(() => {
     const reports = loadReports();
@@ -37,12 +40,12 @@ function ReportContent({ id }: { id: string }) {
     <>
       <Header title={title} backHref="/backtests" />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <ReportTabs>
+        <ReportTabs rightSlot={<DisplayModeToggle mode={displayMode} onChange={setDisplayMode} />}>
           {{
-            overview: <ReportOverview report={report} />,
+            overview: <ReportOverview report={report} displayMode={displayMode} />,
             trades: <ReportTrades report={report} />,
-            calendar: <ReportCalendar report={report} />,
-            performance: <ReportPerformance report={report} />,
+            calendar: <ReportCalendar report={report} displayMode={displayMode} />,
+            performance: <ReportPerformance report={report} displayMode={displayMode} />,
           }}
         </ReportTabs>
       </main>
