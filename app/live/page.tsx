@@ -11,7 +11,7 @@ import LiveAccountPanel from '../components/live/LiveAccountPanel';
 import OpenPositionsTable from '../components/live/OpenPositionsTable';
 import AccountSelector from '../components/live/AccountSelector';
 import LiveTabs, { TabId } from '../components/live/LiveTabs';
-import DisplayModeToggle from '../components/live/DisplayModeToggle';
+import DisplayModeToggle from '../components/shared/DisplayModeToggle';
 import OverviewTab from '../components/live/OverviewTab';
 import TradesTab from '../components/live/TradesTab';
 import CalendarTab from '../components/live/CalendarTab';
