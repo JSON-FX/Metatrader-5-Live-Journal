@@ -60,18 +60,17 @@ export interface LiveDataState {
 }
 
 export interface AccountConfig {
-  id: string;
+  id: number;
+  slug: string;
   name: string;
   type: 'live' | 'propfirm';
   endpoint: string;
-}
-
-export interface AccountsFile {
-  accounts: AccountConfig[];
+  sort_order: number;
 }
 
 export interface AccountListItem {
-  id: string;
+  id: number;
+  slug: string;
   name: string;
   type: 'live' | 'propfirm';
   status: LiveStatus;
