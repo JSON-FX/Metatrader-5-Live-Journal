@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Plus, Server, HelpCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import Link from 'next/link';
+import { useSettings } from '../../lib/settings-context';
 import { AccountListItem } from '../../lib/live-types';
 import AccountForm from '../../components/live/AccountForm';
 import AccountList from '../../components/live/AccountList';
@@ -11,6 +12,18 @@ import EmptyState from '../../components/shared/EmptyState';
 type FormMode = { type: 'closed' } | { type: 'add' } | { type: 'edit'; account: AccountListItem; endpoint: string; ruleId: number | null };
 
 export default function SettingsPage() {
+  const { timezone, setTimezone } = useSettings();
+  const [tzSearch, setTzSearch] = useState('');
+  const [tzDropdownOpen, setTzDropdownOpen] = useState(false);
+
+  const allTimezones = useMemo(() => Intl.supportedValuesOf('timeZone'), []);
+
+  const filteredTimezones = useMemo(() => {
+    if (!tzSearch) return allTimezones;
+    const lower = tzSearch.toLowerCase();
+    return allTimezones.filter(tz => tz.toLowerCase().includes(lower));
+  }, [allTimezones, tzSearch]);
+
   const [accounts, setAccounts] = useState<AccountListItem[]>([]);
   const [formMode, setFormMode] = useState<FormMode>({ type: 'closed' });
   const [saving, setSaving] = useState(false);
@@ -119,6 +132,51 @@ export default function SettingsPage() {
           )}
         </div>
       </div>
+
+        {/* Timezone */}
+        <div className="bg-bg-secondary border border-border rounded-xl p-6">
+          <h2 className="text-lg font-semibold text-text-primary mb-4">Timezone</h2>
+          <p className="text-sm text-text-muted mb-4">
+            All timestamps across the app will be displayed in the selected timezone.
+          </p>
+          <div className="relative max-w-sm">
+            <input
+              type="text"
+              value={tzDropdownOpen ? tzSearch : timezone}
+              onChange={(e) => { setTzSearch(e.target.value); setTzDropdownOpen(true); }}
+              onFocus={() => { setTzDropdownOpen(true); setTzSearch(''); }}
+              onBlur={() => setTimeout(() => setTzDropdownOpen(false), 200)}
+              placeholder="Search timezones..."
+              className="w-full px-3 py-2 bg-bg-primary border border-border rounded-lg text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-accent/50"
+            />
+            {tzDropdownOpen && (
+              <div className="absolute z-50 mt-1 w-full max-h-60 overflow-y-auto bg-bg-secondary border border-border rounded-lg shadow-lg">
+                {filteredTimezones.slice(0, 50).map(tz => (
+                  <button
+                    key={tz}
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => {
+                      setTimezone(tz);
+                      setTzSearch('');
+                      setTzDropdownOpen(false);
+                    }}
+                    className={`w-full text-left px-3 py-2 text-sm hover:bg-bg-tertiary transition-colors ${
+                      tz === timezone ? 'text-accent font-medium' : 'text-text-secondary'
+                    }`}
+                  >
+                    {tz}
+                  </button>
+                ))}
+                {filteredTimezones.length === 0 && (
+                  <div className="px-3 py-2 text-sm text-text-muted">No timezones found</div>
+                )}
+              </div>
+            )}
+          </div>
+          <p className="text-xs text-text-muted mt-2">
+            Currently: <span className="font-mono text-text-secondary">{timezone}</span>
+          </p>
+        </div>
 
       {formMode.type !== 'closed' && (
         <AccountForm
