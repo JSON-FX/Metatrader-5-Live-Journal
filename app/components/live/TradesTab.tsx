@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { format, parseISO } from 'date-fns';
+import { formatDateTime } from '../../lib/format-datetime';
+import { useSettings } from '../../lib/settings-context';
 import { LiveTrade, DisplayMode } from '../../lib/live-types';
 import { calculateRunningBalance, formatValue } from '../../lib/trade-stats';
 import DataTable, { Column } from '../shared/DataTable';
@@ -22,13 +23,9 @@ function formatCurrency(value: number): string {
   }).format(value);
 }
 
-function formatDate(isoString: string): string {
-  try { return format(parseISO(isoString), 'yyyy/MM/dd HH:mm:ss'); }
-  catch { return isoString; }
-}
-
 export default function TradesTab({ trades, balance, displayMode }: TradesTabProps) {
   const [filterType, setFilterType] = useState<FilterType>('all');
+  const { timezone } = useSettings();
 
   const startingCapital = useMemo(() => {
     const totalPnl = trades.reduce((sum, t) => sum + t.profit + t.commission + t.swap, 0);
@@ -53,8 +50,13 @@ export default function TradesTab({ trades, balance, displayMode }: TradesTabPro
 
   const columns: Column<{ trade: LiveTrade; balance: number }>[] = [
     {
+      key: 'open_time', label: 'Open Time',
+      render: (row) => <span className="text-text-muted text-xs">{formatDateTime(row.trade.open_time, timezone)}</span>,
+      sortable: true, sortValue: (row) => row.trade.open_time,
+    },
+    {
       key: 'close_time', label: 'Close Time',
-      render: (row) => <span className="text-text-muted text-xs">{formatDate(row.trade.close_time)}</span>,
+      render: (row) => <span className="text-text-muted text-xs">{formatDateTime(row.trade.close_time, timezone)}</span>,
       sortable: true, sortValue: (row) => row.trade.close_time,
     },
     {
