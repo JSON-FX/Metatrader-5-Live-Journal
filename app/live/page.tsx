@@ -16,13 +16,14 @@ import OverviewTab from '../components/live/OverviewTab';
 import TradesTab from '../components/live/TradesTab';
 import CalendarTab from '../components/live/CalendarTab';
 import PerformanceTab from '../components/live/PerformanceTab';
+import OrdersDealsTab from '../components/live/OrdersDealsTab';
 
 const LS_KEY = 'mt5-last-account';
 
 function getInitialTab(): TabId {
   if (typeof window === 'undefined') return 'overview';
   const hash = window.location.hash.slice(1);
-  if (['overview', 'objectives', 'trades', 'calendar', 'performance'].includes(hash)) return hash as TabId;
+  if (['overview', 'objectives', 'trades', 'orders-deals', 'calendar', 'performance'].includes(hash)) return hash as TabId;
   return 'overview';
 }
 
@@ -32,7 +33,7 @@ function LivePageContent() {
   const [accountId, setAccountId] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
   const [activeTab, setActiveTab] = useState<TabId>(getInitialTab);
-  const [displayMode, setDisplayMode] = useState<DisplayMode>('money');
+  const [displayMode, setDisplayMode] = useState<DisplayMode>('percent');
   const [accountRule, setAccountRule] = useState<PropfirmRule | null>(null);
 
   useEffect(() => {
@@ -148,6 +149,14 @@ function LivePageContent() {
       )}
       {activeTab === 'trades' && liveData.account && (
         <TradesTab trades={liveData.history} balance={liveData.account.balance} displayMode={displayMode} />
+      )}
+      {activeTab === 'orders-deals' && liveData.account && (
+        <OrdersDealsTab
+          rawDeals={liveData.rawDeals}
+          rawOrders={liveData.rawOrders}
+          balance={liveData.account.balance}
+          displayMode={displayMode}
+        />
       )}
       {activeTab === 'calendar' && liveData.account && (
         <CalendarTab trades={liveData.history} balance={liveData.account.balance} displayMode={displayMode} />
