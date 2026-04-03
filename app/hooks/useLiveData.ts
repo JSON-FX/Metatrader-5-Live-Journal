@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { LiveDataState, LiveAccountInfo, LivePosition, LiveTrade } from '../lib/live-types';
+import { LiveDataState, LiveAccountInfo, LivePosition, LiveTrade, RawDeal, RawOrder } from '../lib/live-types';
 
 const FAST_INTERVAL = 5_000;   // 5s for account, positions, health
 const SLOW_INTERVAL = 60_000;  // 60s for trade history
@@ -13,12 +13,16 @@ export function useLiveData(accountId: string | null): LiveDataState {
     account: null,
     positions: [],
     history: [],
+    rawDeals: [],
+    rawOrders: [],
     lastUpdated: null,
     error: null,
   });
 
   const abortRef = useRef<AbortController | null>(null);
   const lastHistory = useRef<LiveTrade[]>([]);
+  const lastRawDeals = useRef<RawDeal[]>([]);
+  const lastRawOrders = useRef<RawOrder[]>([]);
 
   useEffect(() => {
     setState({
@@ -26,10 +30,14 @@ export function useLiveData(accountId: string | null): LiveDataState {
       account: null,
       positions: [],
       history: [],
+      rawDeals: [],
+      rawOrders: [],
       lastUpdated: null,
       error: null,
     });
     lastHistory.current = [];
+    lastRawDeals.current = [];
+    lastRawOrders.current = [];
 
     if (!accountId) return;
 
@@ -83,14 +91,32 @@ export function useLiveData(accountId: string | null): LiveDataState {
 
     async function pollHistory() {
       try {
-        const res = await fetch(`/api/live/history?${q}&days=${HISTORY_DAYS}`);
-        if (res.ok) {
-          const history: LiveTrade[] = await res.json();
+        const [historyRes, dealsRes, ordersRes] = await Promise.all([
+          fetch(`/api/live/history?${q}&days=${HISTORY_DAYS}`),
+          fetch(`/api/live/raw-deals?${q}&days=${HISTORY_DAYS}`),
+          fetch(`/api/live/raw-orders?${q}&days=${HISTORY_DAYS}`),
+        ]);
+
+        let history = lastHistory.current;
+        let rawDeals = lastRawDeals.current;
+        let rawOrders = lastRawOrders.current;
+
+        if (historyRes.ok) {
+          history = await historyRes.json();
           lastHistory.current = history;
-          setState(prev => ({ ...prev, history }));
         }
+        if (dealsRes.ok) {
+          rawDeals = await dealsRes.json();
+          lastRawDeals.current = rawDeals;
+        }
+        if (ordersRes.ok) {
+          rawOrders = await ordersRes.json();
+          lastRawOrders.current = rawOrders;
+        }
+
+        setState(prev => ({ ...prev, history, rawDeals, rawOrders }));
       } catch {
-        // Keep last known history
+        // Keep last known data
       }
 
       scheduleSlow();
@@ -110,11 +136,13 @@ export function useLiveData(accountId: string | null): LiveDataState {
       const signal = abortRef.current.signal;
 
       try {
-        const [healthRes, accountRes, positionsRes, historyRes] = await Promise.all([
+        const [healthRes, accountRes, positionsRes, historyRes, dealsRes, ordersRes] = await Promise.all([
           fetch(`/api/live/health?${q}`, { signal }),
           fetch(`/api/live/account?${q}`, { signal }),
           fetch(`/api/live/positions?${q}`, { signal }),
           fetch(`/api/live/history?${q}&days=${HISTORY_DAYS}`, { signal }),
+          fetch(`/api/live/raw-deals?${q}&days=${HISTORY_DAYS}`, { signal }),
+          fetch(`/api/live/raw-orders?${q}&days=${HISTORY_DAYS}`, { signal }),
         ]);
 
         if (signal.aborted) return;
@@ -129,11 +157,24 @@ export function useLiveData(accountId: string | null): LiveDataState {
           lastHistory.current = history;
         }
 
+        let rawDeals = lastRawDeals.current;
+        let rawOrders = lastRawOrders.current;
+        if (dealsRes.ok) {
+          rawDeals = await dealsRes.json();
+          lastRawDeals.current = rawDeals;
+        }
+        if (ordersRes.ok) {
+          rawOrders = await ordersRes.json();
+          lastRawOrders.current = rawOrders;
+        }
+
         setState({
           status: isOnline ? 'online' : 'offline',
           account,
           positions,
           history,
+          rawDeals,
+          rawOrders,
           lastUpdated: new Date(),
           error: isOnline ? null : 'MT5 disconnected',
         });
