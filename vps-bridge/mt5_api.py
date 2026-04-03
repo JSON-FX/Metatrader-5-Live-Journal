@@ -35,6 +35,9 @@ GET /health              — Connection status + MT5 version
 GET /account             — Balance, equity, floating P/L, drawdown
 GET /positions           — All open positions
 GET /orders              — All pending orders
+GET /history?days=90     — Closed trades (paired round-trips)
+GET /raw-deals?days=90   — All historical deals (unpaired)
+GET /raw-orders?days=90  — All historical orders (filled, canceled, etc.)
 GET /symbol/<symbol>     — Current bid/ask for a symbol
 """
 
@@ -383,6 +386,133 @@ def get_history():
     # Most recent first
     trades.sort(key=lambda t: t["close_time"], reverse=True)
     return jsonify(trades)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Raw deals (unpaired)
+# ─────────────────────────────────────────────────────────────────────────────
+
+@app.route("/raw-deals", methods=["GET"])
+def get_raw_deals():
+    """
+    Returns all historical deals without pairing.
+    Includes trading deals (buy/sell), balance operations, credits, etc.
+    """
+    if not ensure_connected():
+        return error_response("MT5 not connected")
+
+    try:
+        days = min(int(request.args.get("days", 90)), 3650)
+    except (ValueError, TypeError):
+        days = 90
+
+    from_date = datetime.now(timezone.utc) - timedelta(days=days)
+    to_date   = datetime.now(timezone.utc)
+
+    deals = mt5.history_deals_get(from_date, to_date)
+
+    if deals is None:
+        if mt5.last_error()[0] != 0:
+            return error_response("Failed to retrieve deals")
+        return jsonify([])
+
+    type_map = {
+        0: "buy", 1: "sell", 2: "balance", 3: "credit",
+        4: "charge", 5: "correction",
+    }
+    entry_map = {0: "in", 1: "out", 2: "reverse"}
+
+    result = []
+    for deal in deals:
+        d = deal._asdict()
+        result.append({
+            "ticket":      d.get("ticket"),
+            "position_id": d.get("position_id", 0),
+            "symbol":      d.get("symbol", ""),
+            "type":        type_map.get(d.get("type", -1), "other"),
+            "entry":       entry_map.get(d.get("entry", -1), ""),
+            "volume":      round(d.get("volume", 0), 2),
+            "price":       round(d.get("price", 0), 5),
+            "profit":      round(d.get("profit", 0), 2),
+            "commission":  round(d.get("commission", 0), 2),
+            "swap":        round(d.get("swap", 0), 2),
+            "time":        datetime.fromtimestamp(
+                               d.get("time", 0), tz=timezone.utc
+                           ).isoformat(),
+            "comment":     d.get("comment", ""),
+            "magic":       d.get("magic", 0),
+        })
+
+    # Most recent first
+    result.sort(key=lambda d: d["time"], reverse=True)
+    return jsonify(result)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Raw historical orders
+# ─────────────────────────────────────────────────────────────────────────────
+
+@app.route("/raw-orders", methods=["GET"])
+def get_raw_orders():
+    """
+    Returns all historical orders (filled, canceled, expired, etc.).
+    """
+    if not ensure_connected():
+        return error_response("MT5 not connected")
+
+    try:
+        days = min(int(request.args.get("days", 90)), 3650)
+    except (ValueError, TypeError):
+        days = 90
+
+    from_date = datetime.now(timezone.utc) - timedelta(days=days)
+    to_date   = datetime.now(timezone.utc)
+
+    orders = mt5.history_orders_get(from_date, to_date)
+
+    if orders is None:
+        if mt5.last_error()[0] != 0:
+            return error_response("Failed to retrieve historical orders")
+        return jsonify([])
+
+    type_map = {
+        0: "buy",            1: "sell",
+        2: "buy_limit",      3: "sell_limit",
+        4: "buy_stop",       5: "sell_stop",
+        6: "buy_stop_limit", 7: "sell_stop_limit",
+    }
+    state_map = {
+        0: "started", 1: "placed", 2: "canceled",
+        3: "partial", 4: "filled", 5: "rejected", 6: "expired",
+    }
+
+    result = []
+    for order in orders:
+        d = order._asdict()
+        result.append({
+            "ticket":         d.get("ticket"),
+            "position_id":    d.get("position_id", 0),
+            "symbol":         d.get("symbol", ""),
+            "type":           type_map.get(d.get("type", -1), "unknown"),
+            "volume_initial": round(d.get("volume_initial", 0), 2),
+            "volume_current": round(d.get("volume_current", 0), 2),
+            "price":          round(d.get("price_open", 0), 5),
+            "sl":             d.get("sl") or None,
+            "tp":             d.get("tp") or None,
+            "state":          state_map.get(d.get("state", -1), "unknown"),
+            "time_setup":     datetime.fromtimestamp(
+                                  d.get("time_setup", 0), tz=timezone.utc
+                              ).isoformat(),
+            "time_done":      datetime.fromtimestamp(
+                                  d.get("time_done", 0), tz=timezone.utc
+                              ).isoformat(),
+            "comment":        d.get("comment", ""),
+            "magic":          d.get("magic", 0),
+        })
+
+    # Most recent first
+    result.sort(key=lambda d: d["time_setup"], reverse=True)
+    return jsonify(result)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
