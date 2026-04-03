@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import StreaksTable from '../shared/StreaksTable';
 import { LiveTrade, DisplayMode } from '../../lib/live-types';
 import { groupByDay, calculateStreaks, DailyPnl, formatValue } from '../../lib/trade-stats';
+import { useSettings } from '../../lib/settings-context';
 
 interface CalendarTabProps {
   trades: LiveTrade[];
@@ -26,16 +27,17 @@ export default function CalendarTab({ trades, balance, displayMode }: CalendarTa
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth());
+  const { timezone } = useSettings();
 
-  const dailyData = useMemo(() => groupByDay(trades), [trades]);
+  const dailyData = useMemo(() => groupByDay(trades, timezone), [trades, timezone]);
   // Filter trades for selected month and calculate streaks
   const monthTrades = useMemo(() => {
     const prefix = `${year}-${String(month + 1).padStart(2, '0')}`;
     return trades.filter(t => t.close_time.startsWith(prefix));
   }, [trades, year, month]);
 
-  const monthStreaks = useMemo(() => calculateStreaks(monthTrades), [monthTrades]);
-  const allTimeStreaks = useMemo(() => calculateStreaks(trades), [trades]);
+  const monthStreaks = useMemo(() => calculateStreaks(monthTrades, timezone), [monthTrades, timezone]);
+  const allTimeStreaks = useMemo(() => calculateStreaks(trades, timezone), [trades, timezone]);
 
   const startingCapital = useMemo(() => {
     const totalPnl = trades.reduce((sum, t) => sum + t.profit + t.commission + t.swap, 0);

@@ -3,6 +3,7 @@
 import { useMemo } from 'react';
 import { LiveTrade, DisplayMode } from '../../lib/live-types';
 import { groupByMonth, MonthlyPnl, formatValue } from '../../lib/trade-stats';
+import { useSettings } from '../../lib/settings-context';
 
 interface PerformanceTabProps {
   trades: LiveTrade[];
@@ -13,12 +14,14 @@ interface PerformanceTabProps {
 const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 export default function PerformanceTab({ trades, balance, displayMode }: PerformanceTabProps) {
+  const { timezone } = useSettings();
+
   const startingCapital = useMemo(() => {
     const totalPnl = trades.reduce((sum, t) => sum + t.profit + t.commission + t.swap, 0);
     return balance - totalPnl;
   }, [trades, balance]);
 
-  const monthly = useMemo(() => groupByMonth(trades), [trades]);
+  const monthly = useMemo(() => groupByMonth(trades, timezone), [trades, timezone]);
 
   const grid = useMemo(() => {
     const yearMap = new Map<number, (MonthlyPnl | null)[]>();
