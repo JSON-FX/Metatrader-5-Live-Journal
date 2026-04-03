@@ -90,8 +90,8 @@ export default function OrdersDealsTab({ rawDeals, rawOrders, balance, displayMo
       key: 'kind', label: 'Kind',
       render: (row) => (
         row.kind === 'deal'
-          ? <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-[#1e3a5f] text-[#60a5fa]">DEAL</span>
-          : <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-[#2d1f4e] text-[#a78bfa]">ORDER</span>
+          ? <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-accent/15 text-accent">DEAL</span>
+          : <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-purple-500/15 text-purple-600 dark:text-purple-400">ORDER</span>
       ),
       sortable: true, sortValue: (row) => row.kind,
     },
