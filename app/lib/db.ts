@@ -71,6 +71,18 @@ async function ensureDatabase(): Promise<void> {
     // Column already exists — ignore
   }
 
+  await p.execute(`
+    CREATE TABLE IF NOT EXISTS app_settings (
+      setting_key VARCHAR(50) PRIMARY KEY,
+      setting_value TEXT NOT NULL
+    )
+  `);
+
+  // Seed default timezone if not exists
+  await p.execute(`
+    INSERT IGNORE INTO app_settings (setting_key, setting_value) VALUES ('timezone', 'UTC')
+  `);
+
   initialized = true;
 }
 
