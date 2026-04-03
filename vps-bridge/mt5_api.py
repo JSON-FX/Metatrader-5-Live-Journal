@@ -59,12 +59,10 @@ MT5_PASSWORD = os.environ.get("MT5_PASSWORD", "")
 MT5_SERVER   = os.environ.get("MT5_SERVER", "")
 FLASK_PORT   = int(os.environ.get("FLASK_PORT", "5555"))
 
-# Broker server GMT offset in hours.  MT5 Python API returns timestamps in
-# broker-local time, NOT true UTC.  Set this to your broker's fixed GMT offset
-# so the bridge can convert to real UTC before sending to the journal.
-# ICMarkets SC = 3, ICMarkets Global = 2/3 (DST), Pepperstone = 3, etc.
-BROKER_GMT_OFFSET = int(os.environ.get("BROKER_GMT_OFFSET", "0"))
-_BROKER_DELTA = timedelta(hours=BROKER_GMT_OFFSET)
+# Auto-detected broker GMT offset (updated on each /health check).
+# Falls back to BROKER_GMT_OFFSET env var if auto-detection fails.
+_BROKER_GMT_OFFSET_FALLBACK = int(os.environ.get("BROKER_GMT_OFFSET", "0"))
+_broker_gmt_offset: int = _BROKER_GMT_OFFSET_FALLBACK
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Flask app setup
@@ -85,12 +83,47 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Timestamp helper
+# Broker GMT offset auto-detection  (same approach as the EA's DetectGMTOffset)
 # ─────────────────────────────────────────────────────────────────────────────
+
+def detect_gmt_offset() -> None:
+    """
+    Compare a live tick timestamp (broker-local) with real UTC to derive the
+    broker's GMT offset.  Called from /health so it stays current across DST
+    transitions.  Mirrors the EA's DetectGMTOffset() logic.
+    """
+    global _broker_gmt_offset
+
+    try:
+        # Use a liquid symbol to get a fresh tick
+        for sym in ("EURUSD", "GBPUSD", "USDJPY"):
+            tick = mt5.symbol_info_tick(sym)
+            if tick is not None:
+                break
+        else:
+            return  # no tick available — keep previous offset
+
+        broker_ts  = tick.time                                  # broker-local unix ts
+        real_utc   = int(datetime.now(timezone.utc).timestamp())
+        diff_secs  = broker_ts - real_utc
+        diff_hours = round(diff_secs / 3600)
+
+        # Sanity check (same as EA: -12..+14)
+        if diff_hours < -12 or diff_hours > 14:
+            return
+
+        if diff_hours != _broker_gmt_offset:
+            logger.info("GMT offset changed: %+d → %+d (DST transition?)",
+                        _broker_gmt_offset, diff_hours)
+
+        _broker_gmt_offset = diff_hours
+    except Exception:
+        pass  # keep previous offset on any error
+
 
 def broker_ts_to_utc(ts: int) -> str:
     """Convert an MT5 broker-local Unix timestamp to a true-UTC ISO 8601 string."""
-    dt = datetime.fromtimestamp(ts, tz=timezone.utc) - _BROKER_DELTA
+    dt = datetime.fromtimestamp(ts, tz=timezone.utc) - timedelta(hours=_broker_gmt_offset)
     return dt.isoformat()
 
 
@@ -156,12 +189,17 @@ def health():
     version   = mt5.version() if connected else None
     account   = mt5.account_info() if connected else None
 
+    # Auto-detect broker GMT offset (mirrors EA's DetectGMTOffset)
+    if connected:
+        detect_gmt_offset()
+
     return jsonify({
-        "status":      "ok" if connected else "mt5_disconnected",
-        "mt5_version": ".".join(str(v) for v in version) if version else None,
-        "account":     account.login if account else None,
-        "server":      account.server if account else None,
-        "timestamp":   datetime.now(timezone.utc).isoformat(),
+        "status":       "ok" if connected else "mt5_disconnected",
+        "mt5_version":  ".".join(str(v) for v in version) if version else None,
+        "account":      account.login if account else None,
+        "server":       account.server if account else None,
+        "gmt_offset":   _broker_gmt_offset,
+        "timestamp":    datetime.now(timezone.utc).isoformat(),
     }), 200 if connected else 503
 
 
@@ -552,7 +590,7 @@ def get_symbol_price(symbol: str):
 if __name__ == "__main__":
     account_label = f"account {MT5_LOGIN}" if MT5_LOGIN else "default account"
     print(f"Starting MT5 Flask bridge for {account_label} on http://127.0.0.1:{FLASK_PORT}")
-    print(f"Broker GMT offset: {BROKER_GMT_OFFSET:+d} hours")
+    print(f"Broker GMT offset: auto-detect (fallback: {_BROKER_GMT_OFFSET_FALLBACK:+d})")
     print("MT5 terminal must be running and logged in before this script starts.")
     print("Press Ctrl+C to stop.\n")
 
