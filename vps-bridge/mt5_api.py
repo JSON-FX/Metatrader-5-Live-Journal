@@ -59,6 +59,13 @@ MT5_PASSWORD = os.environ.get("MT5_PASSWORD", "")
 MT5_SERVER   = os.environ.get("MT5_SERVER", "")
 FLASK_PORT   = int(os.environ.get("FLASK_PORT", "5555"))
 
+# Broker server GMT offset in hours.  MT5 Python API returns timestamps in
+# broker-local time, NOT true UTC.  Set this to your broker's fixed GMT offset
+# so the bridge can convert to real UTC before sending to the journal.
+# ICMarkets SC = 3, ICMarkets Global = 2/3 (DST), Pepperstone = 3, etc.
+BROKER_GMT_OFFSET = int(os.environ.get("BROKER_GMT_OFFSET", "0"))
+_BROKER_DELTA = timedelta(hours=BROKER_GMT_OFFSET)
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Flask app setup
 # ─────────────────────────────────────────────────────────────────────────────
@@ -76,6 +83,16 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(message)s"
 )
 logger = logging.getLogger(__name__)
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Timestamp helper
+# ─────────────────────────────────────────────────────────────────────────────
+
+def broker_ts_to_utc(ts: int) -> str:
+    """Convert an MT5 broker-local Unix timestamp to a true-UTC ISO 8601 string."""
+    dt = datetime.fromtimestamp(ts, tz=timezone.utc) - _BROKER_DELTA
+    return dt.isoformat()
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # MT5 connection helpers
@@ -226,9 +243,7 @@ def get_positions():
             "profit":        round(d.get("profit", 0), 2),
             "swap":          round(d.get("swap", 0), 2),
             "commission":    round(d.get("commission", 0), 2),
-            "open_time":     datetime.fromtimestamp(
-                                 d.get("time", 0), tz=timezone.utc
-                             ).isoformat(),
+            "open_time":     broker_ts_to_utc(d.get("time", 0)),
             "comment":       d.get("comment", ""),
             "magic":         d.get("magic", 0),
         })
@@ -274,9 +289,7 @@ def get_orders():
             "price":     d.get("price_open"),
             "sl":        d.get("sl") or None,
             "tp":        d.get("tp") or None,
-            "open_time": datetime.fromtimestamp(
-                             d.get("time_setup", 0), tz=timezone.utc
-                         ).isoformat(),
+            "open_time": broker_ts_to_utc(d.get("time_setup", 0)),
             "comment":   d.get("comment", ""),
             "magic":     d.get("magic", 0),
         })
@@ -365,13 +378,10 @@ def get_history():
                 "close_price": round(d.get("price", 0), 5),
                 "sl":          sl_tp.get("sl") or None,
                 "tp":          sl_tp.get("tp") or None,
-                "open_time":   datetime.fromtimestamp(
-                                   open_d.get("time", 0) if open_d else d.get("time", 0),
-                                   tz=timezone.utc
-                               ).isoformat(),
-                "close_time":  datetime.fromtimestamp(
-                                   d.get("time", 0), tz=timezone.utc
-                               ).isoformat(),
+                "open_time":   broker_ts_to_utc(
+                                   open_d.get("time", 0) if open_d else d.get("time", 0)
+                               ),
+                "close_time":  broker_ts_to_utc(d.get("time", 0)),
                 "profit":      round(d.get("profit", 0), 2),
                 "commission":  round(
                                    (open_d.get("commission", 0) if open_d else 0)
@@ -436,9 +446,7 @@ def get_raw_deals():
             "profit":      round(d.get("profit", 0), 2),
             "commission":  round(d.get("commission", 0), 2),
             "swap":        round(d.get("swap", 0), 2),
-            "time":        datetime.fromtimestamp(
-                               d.get("time", 0), tz=timezone.utc
-                           ).isoformat(),
+            "time":        broker_ts_to_utc(d.get("time", 0)),
             "comment":     d.get("comment", ""),
             "magic":       d.get("magic", 0),
         })
@@ -500,12 +508,8 @@ def get_raw_orders():
             "sl":             d.get("sl") or None,
             "tp":             d.get("tp") or None,
             "state":          state_map.get(d.get("state", -1), "unknown"),
-            "time_setup":     datetime.fromtimestamp(
-                                  d.get("time_setup", 0), tz=timezone.utc
-                              ).isoformat(),
-            "time_done":      datetime.fromtimestamp(
-                                  d.get("time_done", 0), tz=timezone.utc
-                              ).isoformat(),
+            "time_setup":     broker_ts_to_utc(d.get("time_setup", 0)),
+            "time_done":      broker_ts_to_utc(d.get("time_done", 0)),
             "comment":        d.get("comment", ""),
             "magic":          d.get("magic", 0),
         })
@@ -537,7 +541,7 @@ def get_symbol_price(symbol: str):
         "bid":       tick.bid,
         "ask":       tick.ask,
         "spread":    round((tick.ask - tick.bid) * 10000, 1),  # approximate pips
-        "timestamp": datetime.fromtimestamp(tick.time, tz=timezone.utc).isoformat(),
+        "timestamp": broker_ts_to_utc(tick.time),
     })
 
 
@@ -548,6 +552,7 @@ def get_symbol_price(symbol: str):
 if __name__ == "__main__":
     account_label = f"account {MT5_LOGIN}" if MT5_LOGIN else "default account"
     print(f"Starting MT5 Flask bridge for {account_label} on http://127.0.0.1:{FLASK_PORT}")
+    print(f"Broker GMT offset: {BROKER_GMT_OFFSET:+d} hours")
     print("MT5 terminal must be running and logged in before this script starts.")
     print("Press Ctrl+C to stop.\n")
 
