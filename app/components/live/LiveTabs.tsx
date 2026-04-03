@@ -1,6 +1,6 @@
 'use client';
 
-export type TabId = 'overview' | 'objectives' | 'trades' | 'calendar' | 'performance';
+export type TabId = 'overview' | 'objectives' | 'trades' | 'orders-deals' | 'calendar' | 'performance';
 
 interface LiveTabsProps {
   activeTab: TabId;
@@ -13,6 +13,7 @@ export default function LiveTabs({ activeTab, onTabChange, showObjectives = fals
     { id: 'overview', label: 'Overview' },
     ...(showObjectives ? [{ id: 'objectives' as TabId, label: 'Objectives' }] : []),
     { id: 'trades', label: 'Trades' },
+    { id: 'orders-deals', label: 'Orders & Deals' },
     { id: 'calendar', label: 'Calendar' },
     { id: 'performance', label: 'Performance' },
   ];
