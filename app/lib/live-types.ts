@@ -48,6 +48,39 @@ export interface LiveTrade {
   magic: number;
 }
 
+export interface RawDeal {
+  ticket: number;
+  position_id: number;
+  symbol: string;
+  type: 'buy' | 'sell' | 'balance' | 'credit' | 'charge' | 'correction' | 'other';
+  entry: 'in' | 'out' | 'reverse' | '';
+  volume: number;
+  price: number;
+  profit: number;
+  commission: number;
+  swap: number;
+  time: string;
+  comment: string;
+  magic: number;
+}
+
+export interface RawOrder {
+  ticket: number;
+  position_id: number;
+  symbol: string;
+  type: 'buy' | 'sell' | 'buy_limit' | 'sell_limit' | 'buy_stop' | 'sell_stop' | 'buy_stop_limit' | 'sell_stop_limit' | 'unknown';
+  volume_initial: number;
+  volume_current: number;
+  price: number;
+  sl: number | null;
+  tp: number | null;
+  state: 'started' | 'placed' | 'canceled' | 'partial' | 'filled' | 'rejected' | 'expired' | 'unknown';
+  time_setup: string;
+  time_done: string;
+  comment: string;
+  magic: number;
+}
+
 export type DisplayMode = 'money' | 'percent';
 
 export type LiveStatus = 'connecting' | 'online' | 'offline';
@@ -57,6 +90,8 @@ export interface LiveDataState {
   account: LiveAccountInfo | null;
   positions: LivePosition[];
   history: LiveTrade[];
+  rawDeals: RawDeal[];
+  rawOrders: RawOrder[];
   lastUpdated: Date | null;
   error: string | null;
 }
