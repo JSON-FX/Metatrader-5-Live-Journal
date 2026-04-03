@@ -1,5 +1,6 @@
 import { LiveTrade } from './live-types';
 import { MT5Deal } from './types';
+import { getDateInTimezone, getYearMonthInTimezone } from './format-datetime';
 
 export interface TradeStats {
   netProfit: number;
@@ -122,11 +123,11 @@ export function calculateEquityCurve(trades: LiveTrade[], startingCapital: numbe
   return points;
 }
 
-export function groupByDay(trades: LiveTrade[]): DailyPnl[] {
+export function groupByDay(trades: LiveTrade[], timezone: string = 'UTC'): DailyPnl[] {
   const map = new Map<string, DailyPnl>();
 
   for (const t of trades) {
-    const date = t.close_time.slice(0, 10);
+    const date = getDateInTimezone(t.close_time, timezone);
     const existing = map.get(date);
     const net = t.profit + t.commission + t.swap;
     if (existing) {
@@ -141,12 +142,11 @@ export function groupByDay(trades: LiveTrade[]): DailyPnl[] {
   return Array.from(map.values()).sort((a, b) => a.date.localeCompare(b.date));
 }
 
-export function groupByMonth(trades: LiveTrade[]): MonthlyPnl[] {
+export function groupByMonth(trades: LiveTrade[], timezone: string = 'UTC'): MonthlyPnl[] {
   const map = new Map<string, MonthlyPnl>();
 
   for (const t of trades) {
-    const year = parseInt(t.close_time.slice(0, 4), 10);
-    const month = parseInt(t.close_time.slice(5, 7), 10) - 1;
+    const { year, month } = getYearMonthInTimezone(t.close_time, timezone);
     const key = `${year}-${month}`;
     const existing = map.get(key);
     const net = t.profit + t.commission + t.swap;
@@ -161,8 +161,8 @@ export function groupByMonth(trades: LiveTrade[]): MonthlyPnl[] {
   return Array.from(map.values()).sort((a, b) => a.year !== b.year ? a.year - b.year : a.month - b.month);
 }
 
-export function calculateStreaks(trades: LiveTrade[]): StreakData {
-  const daily = groupByDay(trades);
+export function calculateStreaks(trades: LiveTrade[], timezone: string = 'UTC'): StreakData {
+  const daily = groupByDay(trades, timezone);
   const sorted = [...trades].sort((a, b) => a.close_time.localeCompare(b.close_time));
 
   // Day streaks (win + lose)
