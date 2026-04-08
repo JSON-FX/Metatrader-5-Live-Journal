@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect, useCallback, Suspense } from 'react';
+import { useState, useEffect, useCallback, useMemo, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Settings } from 'lucide-react';
+import { Settings, RefreshCw } from 'lucide-react';
 import { useLiveData } from '../hooks/useLiveData';
 import { DisplayMode, PropfirmRule } from '../lib/live-types';
 import ObjectivesTab from '../components/live/ObjectivesTab';
@@ -110,7 +110,22 @@ function LivePageContent() {
 
   const liveData = useLiveData(accountId);
 
+  const startingCapital = useMemo(() => {
+    if (!liveData.account) return 0;
+    // Prefer deposit-based: sum all balance-type deals (deposits/withdrawals)
+    const deposits = liveData.rawDeals
+      .filter(d => d.type === 'balance')
+      .reduce((sum, d) => sum + d.profit, 0);
+    if (deposits > 0) return deposits;
+    // Fallback: derive from current balance minus realized P&L
+    if (liveData.history.length === 0) return 0;
+    const totalPnl = liveData.history.reduce((sum, t) => sum + t.profit + t.commission + t.swap, 0);
+    return liveData.account.balance - totalPnl;
+  }, [liveData.account, liveData.history, liveData.rawDeals]);
+
   if (!ready) return null;
+
+  const isRefreshing = liveData.status === 'connecting';
 
   return (
     <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
@@ -123,13 +138,21 @@ function LivePageContent() {
         >
           <Settings className="w-4.5 h-4.5" />
         </Link>
+        <button
+          onClick={liveData.refresh}
+          disabled={isRefreshing}
+          className="p-1.5 rounded-lg text-text-muted hover:text-text-primary hover:bg-bg-tertiary transition-colors disabled:opacity-50"
+          title="Refresh data"
+        >
+          <RefreshCw className={`w-4.5 h-4.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+        </button>
       </div>
 
       <LiveAccountPanel
         status={liveData.status}
         account={liveData.account}
         lastUpdated={liveData.lastUpdated}
-        trades={liveData.history}
+        startingCapital={startingCapital}
       />
 
       {liveData.status === 'online' && (
@@ -142,27 +165,27 @@ function LivePageContent() {
       </div>
 
       {activeTab === 'overview' && liveData.account && (
-        <OverviewTab trades={liveData.history} balance={liveData.account.balance} displayMode={displayMode} />
+        <OverviewTab trades={liveData.history} startingCapital={startingCapital} displayMode={displayMode} />
       )}
       {activeTab === 'objectives' && accountRule && (
         <ObjectivesTab rule={accountRule} trades={liveData.history} account={liveData.account} />
       )}
       {activeTab === 'trades' && liveData.account && (
-        <TradesTab trades={liveData.history} balance={liveData.account.balance} displayMode={displayMode} />
+        <TradesTab trades={liveData.history} startingCapital={startingCapital} displayMode={displayMode} />
       )}
       {activeTab === 'orders-deals' && liveData.account && (
         <OrdersDealsTab
           rawDeals={liveData.rawDeals}
           rawOrders={liveData.rawOrders}
-          balance={liveData.account.balance}
+          startingCapital={startingCapital}
           displayMode={displayMode}
         />
       )}
       {activeTab === 'calendar' && liveData.account && (
-        <CalendarTab trades={liveData.history} balance={liveData.account.balance} displayMode={displayMode} />
+        <CalendarTab trades={liveData.history} startingCapital={startingCapital} displayMode={displayMode} />
       )}
       {activeTab === 'performance' && liveData.account && (
-        <PerformanceTab trades={liveData.history} balance={liveData.account.balance} displayMode={displayMode} />
+        <PerformanceTab trades={liveData.history} startingCapital={startingCapital} displayMode={displayMode} />
       )}
 
       {!liveData.account && liveData.history.length === 0 && activeTab !== 'overview' && (

@@ -1,15 +1,14 @@
 'use client';
 
-import { useMemo } from 'react';
 import { Wifi, WifiOff, Loader2 } from 'lucide-react';
-import { LiveAccountInfo, LiveStatus, LiveTrade } from '../../lib/live-types';
+import { LiveAccountInfo, LiveStatus } from '../../lib/live-types';
 import StatCard from '../shared/StatCard';
 
 interface LiveAccountPanelProps {
   status: LiveStatus;
   account: LiveAccountInfo | null;
   lastUpdated: Date | null;
-  trades: LiveTrade[];
+  startingCapital: number;
 }
 
 function formatCurrency(value: number, currency = 'USD'): string {
@@ -46,14 +45,8 @@ function ConnectionStatus({ status }: { status: LiveStatus }) {
   );
 }
 
-export default function LiveAccountPanel({ status, account, lastUpdated, trades }: LiveAccountPanelProps) {
+export default function LiveAccountPanel({ status, account, lastUpdated, startingCapital }: LiveAccountPanelProps) {
   const currency = account?.currency ?? 'USD';
-
-  const startingCapital = useMemo(() => {
-    if (!account) return null;
-    const totalPnl = trades.reduce((sum, t) => sum + t.profit + t.commission + t.swap, 0);
-    return account.balance - totalPnl;
-  }, [account, trades]);
 
   const floatingVariant = account && account.floating_pnl >= 0 ? 'profit' : 'loss';
   const drawdownVariant = account && account.drawdown_pct > 3 ? 'warning' : 'default';
@@ -89,7 +82,7 @@ export default function LiveAccountPanel({ status, account, lastUpdated, trades 
 
       {account && (
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-          {startingCapital != null && (
+          {startingCapital > 0 && (
             <StatCard
               label="Starting Capital"
               value={formatCurrency(startingCapital, currency)}

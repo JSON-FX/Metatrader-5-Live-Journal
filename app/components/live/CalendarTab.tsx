@@ -9,7 +9,7 @@ import { useSettings } from '../../lib/settings-context';
 
 interface CalendarTabProps {
   trades: LiveTrade[];
-  balance: number;
+  startingCapital: number;
   displayMode: DisplayMode;
 }
 
@@ -23,7 +23,7 @@ function formatCurrency(value: number): string {
 const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-export default function CalendarTab({ trades, balance, displayMode }: CalendarTabProps) {
+export default function CalendarTab({ trades, startingCapital, displayMode }: CalendarTabProps) {
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth());
@@ -38,11 +38,6 @@ export default function CalendarTab({ trades, balance, displayMode }: CalendarTa
 
   const monthStreaks = useMemo(() => calculateStreaks(monthTrades, timezone), [monthTrades, timezone]);
   const allTimeStreaks = useMemo(() => calculateStreaks(trades, timezone), [trades, timezone]);
-
-  const startingCapital = useMemo(() => {
-    const totalPnl = trades.reduce((sum, t) => sum + t.profit + t.commission + t.swap, 0);
-    return balance - totalPnl;
-  }, [trades, balance]);
 
   const monthKey = `${year}-${String(month + 1).padStart(2, '0')}`;
   const dayMap = useMemo(() => {

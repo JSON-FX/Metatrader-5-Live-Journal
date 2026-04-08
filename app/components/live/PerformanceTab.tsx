@@ -7,19 +7,14 @@ import { useSettings } from '../../lib/settings-context';
 
 interface PerformanceTabProps {
   trades: LiveTrade[];
-  balance: number;
+  startingCapital: number;
   displayMode: DisplayMode;
 }
 
 const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-export default function PerformanceTab({ trades, balance, displayMode }: PerformanceTabProps) {
+export default function PerformanceTab({ trades, startingCapital, displayMode }: PerformanceTabProps) {
   const { timezone } = useSettings();
-
-  const startingCapital = useMemo(() => {
-    const totalPnl = trades.reduce((sum, t) => sum + t.profit + t.commission + t.swap, 0);
-    return balance - totalPnl;
-  }, [trades, balance]);
 
   const monthly = useMemo(() => groupByMonth(trades, timezone), [trades, timezone]);
 

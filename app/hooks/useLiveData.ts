@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { LiveDataState, LiveAccountInfo, LivePosition, LiveTrade, RawDeal, RawOrder } from '../lib/live-types';
 
 const FAST_INTERVAL = 5_000;   // 5s for account, positions, health
 const SLOW_INTERVAL = 60_000;  // 60s for trade history
 const HISTORY_DAYS = 3650;     // 10 years
 
-export function useLiveData(accountId: string | null): LiveDataState {
+export function useLiveData(accountId: string | null): LiveDataState & { refresh: () => void } {
   const [state, setState] = useState<LiveDataState>({
     status: 'connecting',
     account: null,
@@ -23,6 +23,9 @@ export function useLiveData(accountId: string | null): LiveDataState {
   const lastHistory = useRef<LiveTrade[]>([]);
   const lastRawDeals = useRef<RawDeal[]>([]);
   const lastRawOrders = useRef<RawOrder[]>([]);
+  const fastTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const slowTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const initRef = useRef<(() => Promise<void>) | null>(null);
 
   useEffect(() => {
     setState({
@@ -41,10 +44,9 @@ export function useLiveData(accountId: string | null): LiveDataState {
 
     if (!accountId) return;
 
-    let fastTimeout: ReturnType<typeof setTimeout>;
-    let slowTimeout: ReturnType<typeof setTimeout>;
-
     const q = `accountId=${encodeURIComponent(accountId)}`;
+
+    const noCache = { cache: 'no-store' as const };
 
     async function pollFast() {
       const controller = new AbortController();
@@ -53,9 +55,9 @@ export function useLiveData(accountId: string | null): LiveDataState {
 
       try {
         const [healthRes, accountRes, positionsRes] = await Promise.all([
-          fetch(`/api/live/health?${q}`, { signal }),
-          fetch(`/api/live/account?${q}`, { signal }),
-          fetch(`/api/live/positions?${q}`, { signal }),
+          fetch(`/api/live/health?${q}`, { signal, ...noCache }),
+          fetch(`/api/live/account?${q}`, { signal, ...noCache }),
+          fetch(`/api/live/positions?${q}`, { signal, ...noCache }),
         ]);
 
         if (signal.aborted) return;
@@ -89,12 +91,20 @@ export function useLiveData(accountId: string | null): LiveDataState {
       scheduleFast();
     }
 
+    function scheduleFast() {
+      fastTimeoutRef.current = setTimeout(pollFast, FAST_INTERVAL);
+    }
+
+    function scheduleSlow() {
+      slowTimeoutRef.current = setTimeout(pollHistory, SLOW_INTERVAL);
+    }
+
     async function pollHistory() {
       try {
         const [historyRes, dealsRes, ordersRes] = await Promise.all([
-          fetch(`/api/live/history?${q}&days=${HISTORY_DAYS}`),
-          fetch(`/api/live/raw-deals?${q}&days=${HISTORY_DAYS}`),
-          fetch(`/api/live/raw-orders?${q}&days=${HISTORY_DAYS}`),
+          fetch(`/api/live/history?${q}&days=${HISTORY_DAYS}`, noCache),
+          fetch(`/api/live/raw-deals?${q}&days=${HISTORY_DAYS}`, noCache),
+          fetch(`/api/live/raw-orders?${q}&days=${HISTORY_DAYS}`, noCache),
         ]);
 
         let history = lastHistory.current;
@@ -122,14 +132,6 @@ export function useLiveData(accountId: string | null): LiveDataState {
       scheduleSlow();
     }
 
-    function scheduleFast() {
-      fastTimeout = setTimeout(pollFast, FAST_INTERVAL);
-    }
-
-    function scheduleSlow() {
-      slowTimeout = setTimeout(pollHistory, SLOW_INTERVAL);
-    }
-
     // Initial load: fetch everything in parallel
     async function init() {
       abortRef.current = new AbortController();
@@ -137,12 +139,12 @@ export function useLiveData(accountId: string | null): LiveDataState {
 
       try {
         const [healthRes, accountRes, positionsRes, historyRes, dealsRes, ordersRes] = await Promise.all([
-          fetch(`/api/live/health?${q}`, { signal }),
-          fetch(`/api/live/account?${q}`, { signal }),
-          fetch(`/api/live/positions?${q}`, { signal }),
-          fetch(`/api/live/history?${q}&days=${HISTORY_DAYS}`, { signal }),
-          fetch(`/api/live/raw-deals?${q}&days=${HISTORY_DAYS}`, { signal }),
-          fetch(`/api/live/raw-orders?${q}&days=${HISTORY_DAYS}`, { signal }),
+          fetch(`/api/live/health?${q}`, { signal, ...noCache }),
+          fetch(`/api/live/account?${q}`, { signal, ...noCache }),
+          fetch(`/api/live/positions?${q}`, { signal, ...noCache }),
+          fetch(`/api/live/history?${q}&days=${HISTORY_DAYS}`, { signal, ...noCache }),
+          fetch(`/api/live/raw-deals?${q}&days=${HISTORY_DAYS}`, { signal, ...noCache }),
+          fetch(`/api/live/raw-orders?${q}&days=${HISTORY_DAYS}`, { signal, ...noCache }),
         ]);
 
         if (signal.aborted) return;
@@ -192,14 +194,36 @@ export function useLiveData(accountId: string | null): LiveDataState {
       scheduleSlow();
     }
 
+    initRef.current = init;
     init();
 
     return () => {
-      clearTimeout(fastTimeout);
-      clearTimeout(slowTimeout);
+      clearTimeout(fastTimeoutRef.current);
+      clearTimeout(slowTimeoutRef.current);
       abortRef.current?.abort();
     };
   }, [accountId]);
 
-  return state;
+  const refresh = useCallback(() => {
+    clearTimeout(fastTimeoutRef.current);
+    clearTimeout(slowTimeoutRef.current);
+    abortRef.current?.abort();
+    lastHistory.current = [];
+    lastRawDeals.current = [];
+    lastRawOrders.current = [];
+    setState({
+      status: 'connecting',
+      account: null,
+      positions: [],
+      history: [],
+      rawDeals: [],
+      rawOrders: [],
+      lastUpdated: null,
+      error: null,
+    });
+    // Small delay to ensure abort is processed before re-fetching
+    setTimeout(() => initRef.current?.(), 50);
+  }, []);
+
+  return { ...state, refresh };
 }

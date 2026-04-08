@@ -10,7 +10,7 @@ import StatusBadge from '../shared/StatusBadge';
 
 interface TradesTabProps {
   trades: LiveTrade[];
-  balance: number;
+  startingCapital: number;
   displayMode: DisplayMode;
 }
 
@@ -23,14 +23,9 @@ function formatCurrency(value: number): string {
   }).format(value);
 }
 
-export default function TradesTab({ trades, balance, displayMode }: TradesTabProps) {
+export default function TradesTab({ trades, startingCapital, displayMode }: TradesTabProps) {
   const [filterType, setFilterType] = useState<FilterType>('all');
   const { timezone } = useSettings();
-
-  const startingCapital = useMemo(() => {
-    const totalPnl = trades.reduce((sum, t) => sum + t.profit + t.commission + t.swap, 0);
-    return balance - totalPnl;
-  }, [trades, balance]);
 
   const withBalance = useMemo(() => calculateRunningBalance(trades, startingCapital), [trades, startingCapital]);
 

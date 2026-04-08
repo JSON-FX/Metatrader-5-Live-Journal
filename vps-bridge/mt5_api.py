@@ -360,7 +360,7 @@ def get_history():
         days = 90
 
     from_date = datetime.now(timezone.utc) - timedelta(days=days)
-    to_date   = datetime.now(timezone.utc)
+    to_date   = datetime.now(timezone.utc) + timedelta(days=1)
 
     deals = mt5.history_deals_get(from_date, to_date)
 
@@ -455,7 +455,7 @@ def get_raw_deals():
         days = 90
 
     from_date = datetime.now(timezone.utc) - timedelta(days=days)
-    to_date   = datetime.now(timezone.utc)
+    to_date   = datetime.now(timezone.utc) + timedelta(days=1)
 
     deals = mt5.history_deals_get(from_date, to_date)
 
@@ -512,7 +512,7 @@ def get_raw_orders():
         days = 90
 
     from_date = datetime.now(timezone.utc) - timedelta(days=days)
-    to_date   = datetime.now(timezone.utc)
+    to_date   = datetime.now(timezone.utc) + timedelta(days=1)
 
     orders = mt5.history_orders_get(from_date, to_date)
 

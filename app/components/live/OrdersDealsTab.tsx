@@ -10,7 +10,7 @@ import DataTable, { Column } from '../shared/DataTable';
 interface OrdersDealsTabProps {
   rawDeals: RawDeal[];
   rawOrders: RawOrder[];
-  balance: number;
+  startingCapital: number;
   displayMode: DisplayMode;
 }
 
@@ -27,17 +27,10 @@ function formatCurrency(value: number): string {
   }).format(value);
 }
 
-export default function OrdersDealsTab({ rawDeals, rawOrders, balance, displayMode }: OrdersDealsTabProps) {
+export default function OrdersDealsTab({ rawDeals, rawOrders, startingCapital, displayMode }: OrdersDealsTabProps) {
   const [filterKind, setFilterKind] = useState<FilterKind>('all');
   const [filterSymbol, setFilterSymbol] = useState<string>('all');
   const { timezone } = useSettings();
-
-  const startingCapital = useMemo(() => {
-    const totalPnl = rawDeals
-      .filter(d => d.entry === 'out')
-      .reduce((sum, d) => sum + d.profit + d.commission + d.swap, 0);
-    return balance - totalPnl;
-  }, [rawDeals, balance]);
 
   // Merge deals and orders into a single chronological list
   const merged = useMemo(() => {
