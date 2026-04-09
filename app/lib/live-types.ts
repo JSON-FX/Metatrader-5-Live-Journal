@@ -100,7 +100,7 @@ export interface AccountConfig {
   id: number;
   slug: string;
   name: string;
-  type: 'live' | 'propfirm';
+  type: 'live' | 'propfirm' | 'demo';
   endpoint: string;
   sort_order: number;
   rule_id: number | null;
@@ -110,7 +110,7 @@ export interface AccountListItem {
   id: number;
   slug: string;
   name: string;
-  type: 'live' | 'propfirm';
+  type: 'live' | 'propfirm' | 'demo';
   status: LiveStatus;
   server: string | null;
   login: number | null;

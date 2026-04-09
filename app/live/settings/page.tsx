@@ -53,7 +53,7 @@ export default function SettingsPage() {
     fetch('/api/live/rules').then(r => r.json()).then(d => setRules(d.rules ?? [])).catch(() => {});
   }, []);
 
-  async function handleSave(data: { slug: string; name: string; type: 'live' | 'propfirm'; endpoint: string; rule_id: number | null }) {
+  async function handleSave(data: { slug: string; name: string; type: 'live' | 'propfirm' | 'demo'; endpoint: string; rule_id: number | null }) {
     setSaving(true);
     setFormError(null);
 

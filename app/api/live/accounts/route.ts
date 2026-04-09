@@ -53,8 +53,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'slug, name, and endpoint are required' }, { status: 400 });
     }
 
-    if (type && type !== 'live' && type !== 'propfirm') {
-      return NextResponse.json({ error: 'type must be "live" or "propfirm"' }, { status: 400 });
+    if (type && type !== 'live' && type !== 'propfirm' && type !== 'demo') {
+      return NextResponse.json({ error: 'type must be "live", "demo", or "propfirm"' }, { status: 400 });
     }
 
     const account = await createAccount({ slug, name, type: type ?? 'live', endpoint, rule_id: rule_id ?? null });

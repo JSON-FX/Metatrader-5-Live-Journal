@@ -1,4 +1,4 @@
-type BadgeVariant = 'buy' | 'sell' | 'online' | 'offline' | 'connecting' | 'backtest' | 'forward' | 'live' | 'merged';
+type BadgeVariant = 'buy' | 'sell' | 'online' | 'offline' | 'connecting' | 'backtest' | 'forward' | 'live' | 'demo' | 'merged';
 
 const variantStyles: Record<BadgeVariant, string> = {
   buy: 'bg-profit/20 text-profit',
@@ -9,6 +9,7 @@ const variantStyles: Record<BadgeVariant, string> = {
   backtest: 'bg-purple-500/20 text-purple-400',
   forward: 'bg-profit/20 text-profit',
   live: 'bg-accent/20 text-accent',
+  demo: 'bg-teal-500/20 text-teal-400',
   merged: 'bg-warning/20 text-warning',
 };
 

@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 interface AccountFormData {
   slug: string;
   name: string;
-  type: 'live' | 'propfirm';
+  type: 'live' | 'propfirm' | 'demo';
   endpoint: string;
   rule_id: number | null;
 }
@@ -29,7 +29,7 @@ function toSlug(name: string): string {
 export default function AccountForm({ initial, rules, onSave, onCancel, saving, error }: AccountFormProps) {
   const [name, setName] = useState(initial?.name ?? '');
   const [slug, setSlug] = useState(initial?.slug ?? '');
-  const [type, setType] = useState<'live' | 'propfirm'>(initial?.type ?? 'live');
+  const [type, setType] = useState<'live' | 'propfirm' | 'demo'>(initial?.type ?? 'live');
   const [endpoint, setEndpoint] = useState(initial?.endpoint ?? '');
   const [ruleId, setRuleId] = useState<number | null>(initial?.rule_id ?? null);
   const [slugTouched, setSlugTouched] = useState(!!initial);
@@ -89,10 +89,11 @@ export default function AccountForm({ initial, rules, onSave, onCancel, saving, 
           <label className={labelClass}>Type</label>
           <select
             value={type}
-            onChange={(e) => setType(e.target.value as 'live' | 'propfirm')}
+            onChange={(e) => setType(e.target.value as 'live' | 'propfirm' | 'demo')}
             className={inputClass}
           >
             <option value="live">Live</option>
+            <option value="demo">Demo</option>
             <option value="propfirm">Prop Firm</option>
           </select>
         </div>

@@ -44,7 +44,7 @@ export default function AccountList({ accounts, onEdit, onDelete }: AccountListP
               <td className="px-5 py-3">
                 <div className="flex items-center gap-2.5">
                   <span className="text-sm text-text-primary font-medium">{account.name}</span>
-                  <StatusBadge label={account.type === 'propfirm' ? 'Prop Firm' : 'Live'} variant={account.type === 'propfirm' ? 'backtest' : 'live'} />
+                  <StatusBadge label={account.type === 'propfirm' ? 'Prop Firm' : account.type === 'demo' ? 'Demo' : 'Live'} variant={account.type === 'propfirm' ? 'backtest' : account.type === 'demo' ? 'demo' : 'live'} />
                 </div>
                 <div className="text-xs text-text-muted mt-0.5 font-mono">{account.slug}</div>
               </td>

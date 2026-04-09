@@ -37,7 +37,7 @@ async function ensureDatabase(): Promise<void> {
       id          INT AUTO_INCREMENT PRIMARY KEY,
       slug        VARCHAR(50) UNIQUE NOT NULL,
       name        VARCHAR(100) NOT NULL,
-      type        ENUM('live', 'propfirm') NOT NULL DEFAULT 'live',
+      type        ENUM('live', 'propfirm', 'demo') NOT NULL DEFAULT 'live',
       endpoint    VARCHAR(255) NOT NULL,
       sort_order  INT NOT NULL DEFAULT 0,
       created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -69,6 +69,13 @@ async function ensureDatabase(): Promise<void> {
     await p.execute(`ALTER TABLE mt5_accounts ADD COLUMN rule_id INT DEFAULT NULL`);
   } catch {
     // Column already exists — ignore
+  }
+
+  // Add 'demo' to account type enum if not already present
+  try {
+    await p.execute(`ALTER TABLE mt5_accounts MODIFY COLUMN type ENUM('live', 'propfirm', 'demo') NOT NULL DEFAULT 'live'`);
+  } catch {
+    // Already updated — ignore
   }
 
   await p.execute(`
