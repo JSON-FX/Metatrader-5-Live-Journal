@@ -3,11 +3,16 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { LiveDataState, LiveAccountInfo, LivePosition, LiveTrade, RawDeal, RawOrder } from '../lib/live-types';
 
-const FAST_INTERVAL = 5_000;   // 5s for account, positions, health
-const SLOW_INTERVAL = 60_000;  // 60s for trade history
 const HISTORY_DAYS = 3650;     // 10 years
 
-export function useLiveData(accountId: string | null): LiveDataState & { refresh: () => void } {
+interface UseLiveDataOptions {
+  pollingFast?: number; // seconds
+  pollingSlow?: number; // seconds
+}
+
+export function useLiveData(accountId: string | null, options?: UseLiveDataOptions): LiveDataState & { refresh: () => void } {
+  const fastInterval = (options?.pollingFast ?? 5) * 1000;
+  const slowInterval = (options?.pollingSlow ?? 60) * 1000;
   const [state, setState] = useState<LiveDataState>({
     status: 'connecting',
     account: null,
@@ -92,11 +97,11 @@ export function useLiveData(accountId: string | null): LiveDataState & { refresh
     }
 
     function scheduleFast() {
-      fastTimeoutRef.current = setTimeout(pollFast, FAST_INTERVAL);
+      fastTimeoutRef.current = setTimeout(pollFast, fastInterval);
     }
 
     function scheduleSlow() {
-      slowTimeoutRef.current = setTimeout(pollHistory, SLOW_INTERVAL);
+      slowTimeoutRef.current = setTimeout(pollHistory, slowInterval);
     }
 
     async function pollHistory() {
@@ -202,7 +207,7 @@ export function useLiveData(accountId: string | null): LiveDataState & { refresh
       clearTimeout(slowTimeoutRef.current);
       abortRef.current?.abort();
     };
-  }, [accountId]);
+  }, [accountId, fastInterval, slowInterval]);
 
   const refresh = useCallback(() => {
     clearTimeout(fastTimeoutRef.current);

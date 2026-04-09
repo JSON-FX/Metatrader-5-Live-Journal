@@ -20,7 +20,7 @@ function getSymbol(report: MT5Report): string {
 function ReportContent({ id }: { id: string }) {
   const router = useRouter();
   const [report, setReport] = useState<MT5Report | null>(null);
-  const [displayMode, setDisplayMode] = useState<DisplayMode>('money');
+  const [displayMode, setDisplayMode] = useState<DisplayMode>('percent');
 
   useEffect(() => {
     const reports = loadReports();

@@ -12,7 +12,7 @@ import EmptyState from '../../components/shared/EmptyState';
 type FormMode = { type: 'closed' } | { type: 'add' } | { type: 'edit'; account: AccountListItem; endpoint: string; ruleId: number | null };
 
 export default function SettingsPage() {
-  const { timezone, setTimezone } = useSettings();
+  const { timezone, setTimezone, pollingFast, pollingSlow, setPollingFast, setPollingSlow } = useSettings();
   const [tzSearch, setTzSearch] = useState('');
   const [tzDropdownOpen, setTzDropdownOpen] = useState(false);
 
@@ -176,6 +176,48 @@ export default function SettingsPage() {
           <p className="text-xs text-text-muted mt-2">
             Currently: <span className="font-mono text-text-secondary">{timezone}</span>
           </p>
+        </div>
+
+        {/* Polling Intervals */}
+        <div className="bg-bg-secondary border border-border rounded-xl p-6">
+          <h2 className="text-lg font-semibold text-text-primary mb-4">Polling Intervals</h2>
+          <p className="text-sm text-text-muted mb-4">
+            Control how frequently the dashboard refreshes data from MT5. Values are in seconds.
+          </p>
+          <div className="flex gap-6">
+            <div className="flex-1 max-w-[200px]">
+              <label className="block text-xs font-medium text-text-secondary mb-1.5">Live data (positions, P/L)</label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  min={1}
+                  value={pollingFast}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value, 10);
+                    if (!isNaN(val)) setPollingFast(val);
+                  }}
+                  className="w-full px-3 py-2 bg-bg-primary border border-border rounded-lg text-sm text-text-primary font-mono focus:outline-none focus:ring-2 focus:ring-accent/50"
+                />
+                <span className="text-xs text-text-muted whitespace-nowrap">seconds</span>
+              </div>
+            </div>
+            <div className="flex-1 max-w-[200px]">
+              <label className="block text-xs font-medium text-text-secondary mb-1.5">History (trades, deals, orders)</label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  min={1}
+                  value={pollingSlow}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value, 10);
+                    if (!isNaN(val)) setPollingSlow(val);
+                  }}
+                  className="w-full px-3 py-2 bg-bg-primary border border-border rounded-lg text-sm text-text-primary font-mono focus:outline-none focus:ring-2 focus:ring-accent/50"
+                />
+                <span className="text-xs text-text-muted whitespace-nowrap">seconds</span>
+              </div>
+            </div>
+          </div>
         </div>
 
       {formMode.type !== 'closed' && (

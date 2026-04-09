@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Settings, RefreshCw } from 'lucide-react';
 import { useLiveData } from '../hooks/useLiveData';
+import { useSettings } from '../lib/settings-context';
 import { DisplayMode, PropfirmRule } from '../lib/live-types';
 import ObjectivesTab from '../components/live/ObjectivesTab';
 import LiveAccountPanel from '../components/live/LiveAccountPanel';
@@ -108,7 +109,8 @@ function LivePageContent() {
     window.location.hash = tab;
   }
 
-  const liveData = useLiveData(accountId);
+  const { pollingFast, pollingSlow } = useSettings();
+  const liveData = useLiveData(accountId, { pollingFast, pollingSlow });
 
   const startingCapital = useMemo(() => {
     if (!liveData.account) return 0;
