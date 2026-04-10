@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Settings, RefreshCw } from 'lucide-react';
 import { useLiveData } from '../hooks/useLiveData';
+import { useTabIndicator } from '../hooks/useTabIndicator';
 import { useSettings } from '../lib/settings-context';
 import { DisplayMode, PropfirmRule } from '../lib/live-types';
 import ObjectivesTab from '../components/live/ObjectivesTab';
@@ -111,6 +112,7 @@ function LivePageContent() {
 
   const { pollingFast, pollingSlow } = useSettings();
   const liveData = useLiveData(accountId, { pollingFast, pollingSlow });
+  useTabIndicator(liveData.positions);
 
   const startingCapital = useMemo(() => {
     if (!liveData.account) return 0;
