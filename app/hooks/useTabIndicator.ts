@@ -27,7 +27,8 @@ function formatCurrencyTitle(value: number): string {
 }
 
 function renderFavicon(canvas: HTMLCanvasElement, value: number | null): string {
-  const ctx = canvas.getContext('2d')!;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return '';
   ctx.clearRect(0, 0, FAVICON_SIZE, FAVICON_SIZE);
 
   let bg: string;
