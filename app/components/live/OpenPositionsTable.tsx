@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { LivePosition } from '../../lib/live-types';
 import DataTable, { Column } from '../shared/DataTable';
@@ -160,7 +160,16 @@ const columns: Column<LivePosition>[] = [
 ];
 
 export default function OpenPositionsTable({ positions, accountId }: OpenPositionsTableProps) {
-  const [chartInput, setChartInput] = useState<PositionLike | null>(null);
+  const [chartTicket, setChartTicket] = useState<number | null>(null);
+
+  // Derive live input from current positions every render so the chart stays up-to-date.
+  const chartInput: PositionLike | null = useMemo(() => {
+    if (chartTicket === null) return null;
+    const p = positions.find(pos => pos.ticket === chartTicket);
+    if (!p) return null; // position closed while modal was open — let the modal close naturally
+    return { kind: 'open', position: p, currentPrice: p.current_price };
+  }, [chartTicket, positions]);
+
   const totalFloating = positions.reduce((sum, p) => sum + p.profit, 0);
 
   return (
@@ -184,15 +193,13 @@ export default function OpenPositionsTable({ positions, accountId }: OpenPositio
           sortable={true}
           emptyMessage="No open positions"
           rowKey={(row) => String(row.ticket)}
-          onRowClick={(row) =>
-            setChartInput({ kind: 'open', position: row as LivePosition, currentPrice: (row as LivePosition).current_price })
-          }
+          onRowClick={(row) => setChartTicket((row as LivePosition).ticket)}
         />
       </div>
       <PositionChartModal
         input={chartInput}
         accountId={accountId}
-        onClose={() => setChartInput(null)}
+        onClose={() => setChartTicket(null)}
       />
     </div>
   );

@@ -124,10 +124,16 @@ export default function PositionChartModal({ input, accountId, onClose }: Positi
           {chart.status === 'ready' && chart.bars.length > 0 && overlays && (
             <PositionChart bars={chart.bars} timeframe={chart.timeframe} overlays={overlays} />
           )}
-          {chart.isStale && chart.status === 'ready' && (
-            <span className="absolute top-2 left-2 text-[10px] font-mono text-text-muted bg-bg-tertiary/80 border border-border px-2 py-0.5 rounded">
-              Live updates paused
-            </span>
+          {chart.status === 'ready' && (
+            chart.isStale ? (
+              <span className="absolute top-2 left-2 text-[10px] font-mono text-text-muted bg-bg-tertiary/80 border border-border px-2 py-0.5 rounded z-10">
+                Live updates paused
+              </span>
+            ) : chart.lastUpdated ? (
+              <span className="absolute top-2 left-2 text-[10px] font-mono text-text-muted bg-bg-tertiary/80 border border-border px-2 py-0.5 rounded z-10">
+                Updated {chart.lastUpdated.toLocaleTimeString()}
+              </span>
+            ) : null
           )}
         </div>
       </div>

@@ -22,6 +22,7 @@ export interface PositionChartState {
   error?: string;
   retry: () => void;
   isStale: boolean;
+  lastUpdated: Date | null;
 }
 
 function errorMessage(status: number): string {
@@ -34,12 +35,17 @@ function errorMessage(status: number): string {
 }
 
 export function usePositionChart(input: PositionLike, accountId: string): PositionChartState {
-  // Derive time and symbol from the DU input
+  // Stable identity key — changes only when the user switches to a different trade/position.
+  // Used to key the closeTs memo so it doesn't recompute every poll for open positions.
+  const stableKey = input.kind === 'open' ? `open:${input.position.ticket}` : `closed:${input.trade.ticket}`;
+
   const { symbol, openTs, closeTs } = useMemo(() => {
     if (input.kind === 'open') {
       return {
         symbol:  input.position.symbol,
         openTs:  Math.floor(new Date(input.position.open_time).getTime() / 1000),
+        // Snapshot "now" once per ticket. The live-update effect extends beyond this
+        // naturally, and the initial window is wide enough (20% padding).
         closeTs: Math.floor(Date.now() / 1000),
       };
     }
@@ -48,7 +54,9 @@ export function usePositionChart(input: PositionLike, accountId: string): Positi
       openTs:  Math.floor(new Date(input.trade.open_time).getTime() / 1000),
       closeTs: Math.floor(new Date(input.trade.close_time).getTime() / 1000),
     };
-  }, [input]);
+    // Only recompute when we switch to a different trade/position (ticket changes).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stableKey]);
 
   const timeframe = useMemo(
     () => pickTimeframe((closeTs - openTs) * 1000),
@@ -59,10 +67,11 @@ export function usePositionChart(input: PositionLike, accountId: string): Positi
     [openTs, closeTs, timeframe],
   );
 
-  const [bars, setBars]     = useState<CandleBar[]>([]);
-  const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
-  const [error, setError]   = useState<string | undefined>();
+  const [bars, setBars]         = useState<CandleBar[]>([]);
+  const [status, setStatus]     = useState<'loading' | 'ready' | 'error'>('loading');
+  const [error, setError]       = useState<string | undefined>();
   const [retryNonce, setRetryNonce] = useState(0);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   useEffect(() => {
     const ctrl = new AbortController();
@@ -82,6 +91,7 @@ export function usePositionChart(input: PositionLike, accountId: string): Positi
         const data: RatesResponse = await res.json();
         setBars(data.bars);
         setStatus('ready');
+        setLastUpdated(new Date());
       })
       .catch((e: { name?: string; status?: number }) => {
         if (e.name === 'AbortError') return;
@@ -124,6 +134,7 @@ export function usePositionChart(input: PositionLike, accountId: string): Positi
           }
           return next;
         });
+        setLastUpdated(new Date());
         setFailures(0);
         setIsStale(false);
       })
@@ -150,5 +161,6 @@ export function usePositionChart(input: PositionLike, accountId: string): Positi
     error,
     retry:  () => setRetryNonce(n => n + 1),
     isStale,
+    lastUpdated,
   };
 }
