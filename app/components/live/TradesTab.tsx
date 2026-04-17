@@ -7,11 +7,14 @@ import { LiveTrade, DisplayMode } from '../../lib/live-types';
 import { calculateRunningBalance, formatValue } from '../../lib/trade-stats';
 import DataTable, { Column } from '../shared/DataTable';
 import StatusBadge from '../shared/StatusBadge';
+import PositionChartModal from './PositionChartModal';
+import type { PositionLike } from '../../hooks/usePositionChart';
 
 interface TradesTabProps {
   trades: LiveTrade[];
   startingCapital: number;
   displayMode: DisplayMode;
+  accountId: string;
 }
 
 type FilterType = 'all' | 'profit' | 'loss';
@@ -23,8 +26,9 @@ function formatCurrency(value: number): string {
   }).format(value);
 }
 
-export default function TradesTab({ trades, startingCapital, displayMode }: TradesTabProps) {
+export default function TradesTab({ trades, startingCapital, displayMode, accountId }: TradesTabProps) {
   const [filterType, setFilterType] = useState<FilterType>('all');
+  const [chartInput, setChartInput] = useState<PositionLike | null>(null);
   const { timezone } = useSettings();
 
   const withBalance = useMemo(() => calculateRunningBalance(trades, startingCapital), [trades, startingCapital]);
@@ -133,8 +137,14 @@ export default function TradesTab({ trades, startingCapital, displayMode }: Trad
           pageSize={25}
           emptyMessage="No trades match this filter"
           rowKey={(row) => String(row.trade.ticket)}
+          onRowClick={(row) => setChartInput({ kind: 'closed', trade: row.trade })}
         />
       </div>
+      <PositionChartModal
+        input={chartInput}
+        accountId={accountId}
+        onClose={() => setChartInput(null)}
+      />
     </div>
   );
 }
