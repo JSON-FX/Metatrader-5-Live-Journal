@@ -92,6 +92,56 @@ export function usePositionChart(input: PositionLike, accountId: string): Positi
     return () => ctrl.abort();
   }, [accountId, symbol, timeframe, range.from, range.to, retryNonce]);
 
+  // --- Live update path (open positions only) -----------------------
+  const [isStale, setIsStale] = useState(false);
+  const [failures, setFailures] = useState(0);
+  const lastBarTime = bars.length ? bars[bars.length - 1].time : null;
+  const currentPrice = input.kind === 'open' ? input.currentPrice : null;
+
+  useEffect(() => {
+    if (input.kind !== 'open' || status !== 'ready' || lastBarTime === null) return;
+
+    const ctrl = new AbortController();
+    const now = Math.floor(Date.now() / 1000);
+    const url = `/api/live/rates?accountId=${encodeURIComponent(accountId)}`
+              + `&symbol=${encodeURIComponent(symbol)}`
+              + `&timeframe=${timeframe}`
+              + `&from=${lastBarTime}&to=${now}`;
+
+    fetch(url, { signal: ctrl.signal })
+      .then(async res => {
+        if (!res.ok) throw new Error('poll failed');
+        const data: RatesResponse = await res.json();
+        if (data.bars.length === 0) return;
+        setBars(prev => {
+          const next = [...prev];
+          for (const b of data.bars) {
+            if (next.length && next[next.length - 1].time === b.time) {
+              next[next.length - 1] = b;                    // replace last bar
+            } else if (next.length === 0 || b.time > next[next.length - 1].time) {
+              next.push(b);                                  // append new bar
+            }
+          }
+          return next;
+        });
+        setFailures(0);
+        setIsStale(false);
+      })
+      .catch((e: { name?: string }) => {
+        if (e.name === 'AbortError') return;
+        setFailures(f => {
+          const nf = f + 1;
+          if (nf >= 3) setIsStale(true);
+          return nf;
+        });
+      });
+
+    return () => ctrl.abort();
+    // `currentPrice` is the poll-change signal: when live data updates, it moves,
+    // and we refetch the tail. `lastBarTime` also changes as bars are appended.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPrice, lastBarTime, status, accountId, symbol, timeframe, input.kind]);
+
   return {
     status,
     bars,
@@ -99,6 +149,6 @@ export function usePositionChart(input: PositionLike, accountId: string): Positi
     window: range,
     error,
     retry:  () => setRetryNonce(n => n + 1),
-    isStale: false,                            // populated in Task 9
+    isStale,
   };
 }
