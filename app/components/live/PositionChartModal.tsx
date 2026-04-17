@@ -40,6 +40,7 @@ export default function PositionChartModal({ input, accountId, onClose }: Positi
     kind: 'closed',
     trade: {
       ticket: 0, symbol: '', type: 'buy', volume: 0, open_price: 0, close_price: 0,
+      sl: null, tp: null,
       open_time: new Date(0).toISOString(), close_time: new Date(0).toISOString(),
       profit: 0, commission: 0, swap: 0, comment: '', magic: 0,
     },
@@ -88,7 +89,7 @@ export default function PositionChartModal({ input, accountId, onClose }: Positi
       overlays: {
         side: t.type, openTime: openTs, openPrice: t.open_price,
         closeTime: closeTs, closePrice: t.close_price,
-        sl: null, tp: null, profit: t.profit, symbol: t.symbol,
+        sl: t.sl, tp: t.tp, profit: t.profit, symbol: t.symbol,
       },
     };
   }, [input, chart.timeframe, timezone]);
