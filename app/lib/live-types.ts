@@ -81,6 +81,22 @@ export interface RawOrder {
   magic: number;
 }
 
+export type Timeframe = 'M1' | 'M5' | 'M15' | 'H1' | 'H4' | 'D1';
+
+export interface CandleBar {
+  time: number;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+}
+
+export interface RatesResponse {
+  symbol: string;
+  timeframe: Timeframe;
+  bars: CandleBar[];
+}
+
 export type DisplayMode = 'money' | 'percent';
 
 export type LiveStatus = 'connecting' | 'online' | 'offline';
