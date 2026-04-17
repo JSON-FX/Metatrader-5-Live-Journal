@@ -20,6 +20,7 @@ interface DataTableProps<T> {
   pageSize?: number;
   emptyMessage?: string;
   rowKey: (row: T, index: number) => string;
+  onRowClick?: (row: T) => void;
 }
 
 export default function DataTable<T>({
@@ -30,6 +31,7 @@ export default function DataTable<T>({
   pageSize = 20,
   emptyMessage = 'No data available',
   rowKey,
+  onRowClick,
 }: DataTableProps<T>) {
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
@@ -102,7 +104,11 @@ export default function DataTable<T>({
           </thead>
           <tbody className="divide-y divide-border">
             {displayed.map((row, i) => (
-              <tr key={rowKey(row, i)} className="hover:bg-bg-tertiary/50 transition-colors">
+              <tr
+                key={rowKey(row, i)}
+                className={`hover:bg-bg-tertiary/50 transition-colors ${onRowClick ? 'cursor-pointer' : ''}`}
+                onClick={onRowClick ? () => onRowClick(row) : undefined}
+              >
                 {columns.map(col => (
                   <td
                     key={col.key}
