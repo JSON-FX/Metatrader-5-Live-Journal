@@ -17,7 +17,7 @@ export function pickTimeframe(durationMs: number): Timeframe {
   return 'D1';
 }
 
-const TIMEFRAME_SECONDS: Record<Timeframe, number> = {
+export const TIMEFRAME_SECONDS: Record<Timeframe, number> = {
   M1:  60,
   M5:  5 * 60,
   M15: 15 * 60,

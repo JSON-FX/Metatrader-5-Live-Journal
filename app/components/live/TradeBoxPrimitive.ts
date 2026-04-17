@@ -24,6 +24,9 @@ export interface TradeBoxOverlays {
   tp: number | null;
   profit: number;
   symbol: string;
+  /** Bar interval in seconds (e.g. 900 for M15). Used to snap openTime/closeTime to bar boundaries
+   *  because timeToCoordinate() only resolves exact bar timestamps. */
+  barSeconds: number;
 }
 
 export interface TradeBoxColors {
@@ -41,13 +44,21 @@ class TradeBoxRenderer implements IPrimitivePaneRenderer {
     private readonly colors: TradeBoxColors,
   ) {}
 
+  /** Snap a unix-second timestamp down to the nearest bar boundary so that
+   *  timeToCoordinate() returns a valid coordinate.  LWC v5 only maps exact
+   *  bar-open timestamps; any mid-bar time returns null. */
+  private snapTime(t: number): Time {
+    const bs = this.overlays.barSeconds;
+    return (Math.floor(t / bs) * bs) as unknown as Time;
+  }
+
   draw(target: DrawTarget) {
     target.useBitmapCoordinateSpace(scope => {
       const ctx = scope.context;
       const { width } = scope.bitmapSize;
 
       const timeScale = this.chart.timeScale();
-      const xOpen = timeScale.timeToCoordinate(this.overlays.openTime as Time);
+      const xOpen = timeScale.timeToCoordinate(this.snapTime(this.overlays.openTime));
       if (xOpen === null) return;
       const xRight = width;                             // extend to chart right edge
 
@@ -88,8 +99,8 @@ class TradeBoxRenderer implements IPrimitivePaneRenderer {
                         this.rgba(isWinning ? this.colors.profit : this.colors.loss, 0.22));
 
           // Entry → current/close connector: dashed line
-          const xEndTs = this.overlays.closeTime ?? this.overlays.openTime;
-          const xEnd = timeScale.timeToCoordinate(xEndTs as Time);
+          const xEndRaw = this.overlays.closeTime ?? this.overlays.openTime;
+          const xEnd = timeScale.timeToCoordinate(this.snapTime(xEndRaw));
           if (xEnd !== null) {
             const xEndPx = xEnd * pxRatio;
             ctx.save();

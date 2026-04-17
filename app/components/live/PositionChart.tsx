@@ -134,7 +134,7 @@ export default function PositionChart({ bars, timeframe, overlays, height = 420 
   return (
     <div className="relative" style={{ height }}>
       <div ref={containerRef} className="w-full h-full" />
-      <div className="absolute top-2 right-2 flex flex-col gap-1 pointer-events-none">
+      <div className="absolute top-2 right-2 z-10 flex flex-col gap-1 pointer-events-none">
         {overlays.tp !== null && (
           <span className="bg-bg-tertiary/80 text-profit text-[11px] font-mono px-2 py-0.5 rounded border border-border">
             TP {fmt(overlays.tp)}

@@ -6,6 +6,7 @@ import { useSettings } from '../../lib/settings-context';
 import Modal from '../shared/Modal';
 import PositionChart from './PositionChart';
 import { usePositionChart, type PositionLike } from '../../hooks/usePositionChart';
+import { TIMEFRAME_SECONDS } from '../../lib/chart-policy';
 import type { TradeBoxOverlays } from './TradeBoxPrimitive';
 
 interface PositionChartModalProps {
@@ -69,6 +70,7 @@ export default function PositionChartModal({ input, accountId, onClose }: Positi
           side: p.type, openTime: openTs, openPrice: p.open_price,
           currentPrice: p.current_price, sl: p.sl, tp: p.tp,
           profit: p.profit, symbol: p.symbol,
+          barSeconds: TIMEFRAME_SECONDS[chart.timeframe],
         },
       };
     }
@@ -90,6 +92,7 @@ export default function PositionChartModal({ input, accountId, onClose }: Positi
         side: t.type, openTime: openTs, openPrice: t.open_price,
         closeTime: closeTs, closePrice: t.close_price,
         sl: t.sl, tp: t.tp, profit: t.profit, symbol: t.symbol,
+        barSeconds: TIMEFRAME_SECONDS[chart.timeframe],
       },
     };
   }, [input, chart.timeframe, timezone]);
