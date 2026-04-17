@@ -1,12 +1,16 @@
 'use client';
 
+import { useState } from 'react';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { LivePosition } from '../../lib/live-types';
 import DataTable, { Column } from '../shared/DataTable';
 import StatusBadge from '../shared/StatusBadge';
+import PositionChartModal from './PositionChartModal';
+import type { PositionLike } from '../../hooks/usePositionChart';
 
 interface OpenPositionsTableProps {
   positions: LivePosition[];
+  accountId: string;
 }
 
 function formatCurrency(value: number): string {
@@ -155,7 +159,8 @@ const columns: Column<LivePosition>[] = [
   },
 ];
 
-export default function OpenPositionsTable({ positions }: OpenPositionsTableProps) {
+export default function OpenPositionsTable({ positions, accountId }: OpenPositionsTableProps) {
+  const [chartInput, setChartInput] = useState<PositionLike | null>(null);
   const totalFloating = positions.reduce((sum, p) => sum + p.profit, 0);
 
   return (
@@ -179,8 +184,16 @@ export default function OpenPositionsTable({ positions }: OpenPositionsTableProp
           sortable={true}
           emptyMessage="No open positions"
           rowKey={(row) => String(row.ticket)}
+          onRowClick={(row) =>
+            setChartInput({ kind: 'open', position: row as LivePosition, currentPrice: (row as LivePosition).current_price })
+          }
         />
       </div>
+      <PositionChartModal
+        input={chartInput}
+        accountId={accountId}
+        onClose={() => setChartInput(null)}
+      />
     </div>
   );
 }

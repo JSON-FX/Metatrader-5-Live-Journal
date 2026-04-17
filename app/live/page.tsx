@@ -159,8 +159,8 @@ function LivePageContent() {
         startingCapital={startingCapital}
       />
 
-      {liveData.status === 'online' && (
-        <OpenPositionsTable positions={liveData.positions} />
+      {liveData.status === 'online' && accountId && (
+        <OpenPositionsTable positions={liveData.positions} accountId={accountId} />
       )}
 
       <div className="flex items-center justify-between">
