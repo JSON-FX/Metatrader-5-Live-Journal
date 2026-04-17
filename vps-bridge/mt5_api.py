@@ -39,6 +39,7 @@ GET /history?days=90     — Closed trades (paired round-trips)
 GET /raw-deals?days=90   — All historical deals (unpaired)
 GET /raw-orders?days=90  — All historical orders (filled, canceled, etc.)
 GET /symbol/<symbol>     — Current bid/ask for a symbol
+GET /rates               — OHLC bars for charting (symbol, timeframe, from, to)
 """
 
 import os
@@ -125,6 +126,18 @@ def broker_ts_to_utc(ts: int) -> str:
     """Convert an MT5 broker-local Unix timestamp to a true-UTC ISO 8601 string."""
     dt = datetime.fromtimestamp(ts, tz=timezone.utc) - timedelta(hours=_broker_gmt_offset)
     return dt.isoformat()
+
+
+# Timeframes supported by /rates. Keep keys short and uppercase for the query param.
+TIMEFRAME_MAP = {
+    "M1":  mt5.TIMEFRAME_M1,
+    "M5":  mt5.TIMEFRAME_M5,
+    "M15": mt5.TIMEFRAME_M15,
+    "H1":  mt5.TIMEFRAME_H1,
+    "H4":  mt5.TIMEFRAME_H4,
+    "D1":  mt5.TIMEFRAME_D1,
+}
+MAX_BARS = 2000
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -580,6 +593,90 @@ def get_symbol_price(symbol: str):
         "ask":       tick.ask,
         "spread":    round((tick.ask - tick.bid) * 10000, 1),  # approximate pips
         "timestamp": broker_ts_to_utc(tick.time),
+    })
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Rates (OHLC bars for charting)
+# ─────────────────────────────────────────────────────────────────────────────
+
+@app.route("/rates", methods=["GET"])
+def get_rates():
+    """
+    Returns OHLC bars for a symbol, timeframe, and UTC time range.
+
+    Query params:
+      symbol     — MT5 symbol (e.g. EURUSD, XAUUSD) — required
+      timeframe  — one of M1, M5, M15, H1, H4, D1 — required
+      from       — UTC unix seconds, inclusive — required
+      to         — UTC unix seconds, inclusive (> from) — required
+
+    Response:
+      { "symbol": str, "timeframe": str,
+        "bars": [ { "time": int (UTC unix secs),
+                    "open": float, "high": float, "low": float, "close": float }, ... ] }
+
+    Timezone handling (verified empirically against real fills, not MT5 docs):
+      • Input datetimes are treated by mt5.copy_rates_range as UTC-aware.
+      • Returned bar 'time' values come back in broker-local wall-clock as unix
+        seconds — NOT UTC, despite what MQL5 docs imply. So we subtract the
+        detected broker GMT offset to yield true UTC.
+    """
+    if not ensure_connected():
+        return error_response("MT5 not connected")
+
+    symbol   = request.args.get("symbol", "").strip()
+    tf_key   = request.args.get("timeframe", "").upper()
+    from_str = request.args.get("from")
+    to_str   = request.args.get("to")
+
+    if not symbol:
+        return jsonify({"error": "Missing 'symbol'"}), 400
+    if tf_key not in TIMEFRAME_MAP:
+        return jsonify({
+            "error": f"Invalid timeframe '{tf_key}'. "
+                     f"Expected one of {list(TIMEFRAME_MAP)}"
+        }), 400
+    try:
+        from_ts = int(from_str)
+        to_ts   = int(to_str)
+    except (TypeError, ValueError):
+        return jsonify({"error": "'from' and 'to' must be unix seconds (int)"}), 400
+    if from_ts >= to_ts:
+        return jsonify({"error": "'from' must be before 'to'"}), 400
+
+    if mt5.symbol_info(symbol) is None:
+        return jsonify({"error": f"Symbol '{symbol}' not found on this account"}), 404
+
+    # Inputs go in as UTC-aware; MT5 treats them as UTC.
+    from_dt = datetime.fromtimestamp(from_ts, tz=timezone.utc)
+    to_dt   = datetime.fromtimestamp(to_ts,   tz=timezone.utc)
+
+    rates = mt5.copy_rates_range(symbol, TIMEFRAME_MAP[tf_key], from_dt, to_dt)
+    if rates is None:
+        return error_response("Failed to retrieve rates")
+
+    # Safety cap — keep the most recent MAX_BARS if the range is oversized.
+    if len(rates) > MAX_BARS:
+        rates = rates[-MAX_BARS:]
+
+    # Output: subtract broker offset to convert broker-local → true UTC.
+    offset_secs = _broker_gmt_offset * 3600
+    bars = [
+        {
+            "time":  int(r["time"]) - offset_secs,
+            "open":  float(r["open"]),
+            "high":  float(r["high"]),
+            "low":   float(r["low"]),
+            "close": float(r["close"]),
+        }
+        for r in rates
+    ]
+
+    return jsonify({
+        "symbol":    symbol,
+        "timeframe": tf_key,
+        "bars":      bars,
     })
 
 
