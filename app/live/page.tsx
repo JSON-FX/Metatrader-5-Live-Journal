@@ -174,8 +174,13 @@ function LivePageContent() {
       {activeTab === 'objectives' && accountRule && (
         <ObjectivesTab rule={accountRule} trades={liveData.history} account={liveData.account} />
       )}
-      {activeTab === 'trades' && liveData.account && (
-        <TradesTab trades={liveData.history} startingCapital={startingCapital} displayMode={displayMode} />
+      {activeTab === 'trades' && liveData.account && accountId && (
+        <TradesTab
+          trades={liveData.history}
+          startingCapital={startingCapital}
+          displayMode={displayMode}
+          accountId={accountId}
+        />
       )}
       {activeTab === 'orders-deals' && liveData.account && (
         <OrdersDealsTab
